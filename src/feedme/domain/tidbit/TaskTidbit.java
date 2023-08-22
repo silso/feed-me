@@ -1,48 +1,39 @@
 package feedme.domain.tidbit;
 
-import feedme.domain.tidbit.plan.TidbitPlan;
-import feedme.domain.tidbit.whiff.Whiff;
+import feedme.domain.tidbit.action.TidbitAction;
+import feedme.domain.tidbit.action.impl.ConsumeAction;
+import feedme.domain.tidbit.action.impl.ExpireAction;
+import feedme.domain.tidbit.action.impl.OnItAction;
+import feedme.domain.tidbit.seed.Seed;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 
-public class TaskTidbit extends Tidbit {
-    private final Instant expiresAt;
+public class TaskTidbit extends Tidbit<Tidbit.Type> {
+
     public TaskTidbit(
         Instant createdAt,
         TidbitState currentState,
         TidbitHistory history,
         String message,
-        List<Whiff> whiffs,
-        TidbitPlan plan,
-        Instant expiresAt
+        Seed seed
     ) {
-        super(createdAt, currentState, history, message, whiffs, plan);
-        this.expiresAt = expiresAt;
+        super(createdAt, currentState, history, message, Type.Task, seed);
     }
 
-    public Instant expiresAt() {
-        return expiresAt;
+    public Set<Class<? extends TidbitAction>> availableActions() {
+        return Set.of(
+            ConsumeAction.class,
+            OnItAction.class,
+            ExpireAction.class
+        );
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TaskTidbit that)) return false;
-        if (!super.equals(o)) return false;
-        return Objects.equals(expiresAt, that.expiresAt);
-    }
+    public static class State extends TidbitState {
+        public static final State OnIt = new State("OnIt");
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), expiresAt);
-    }
-
-    @Override
-    public String toString() {
-        return "TaskTidbit{" +
-            "expiresAt=" + expiresAt +
-            '}';
+        protected State(String name) {
+            super(name);
+        }
     }
 }

@@ -24,14 +24,14 @@ public class CliService {
             String command = matcher.group("command");
             String remaining = matcher.group("remaining");
             switch (command) {
-                case "add" -> add(remaining);
-                case "consume" -> consume(remaining);
+//                case "add" -> add(remaining);
+//                case "consume" -> consume(remaining);
                 case "exit" -> {out("bye"); shouldRun = false;}
             }
         }
         in.close();
     }
-
+/*
     private void add(String remaining) {
         int newId = store.addTidbit(remaining.strip());
         out(String.format("Added %d", newId));
@@ -59,6 +59,7 @@ public class CliService {
             out("Consumed %d", id);
         }
     }
+    */
 
     private void out(String format, Object... objects) {
         System.out.printf((format) + "%n", objects);

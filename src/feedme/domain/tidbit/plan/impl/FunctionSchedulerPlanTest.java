@@ -7,11 +7,11 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class FunctionPlanTest {
+class FunctionSchedulerPlanTest {
 
     @Test
     void testInverseFunctionIsActuallyInverse() {
-        FunctionPlan plan = FunctionPlan.exponential(
+        FunctionSchedulerPlan plan = FunctionSchedulerPlan.exponential(
             2.1D, 10D, Duration.ofDays(2)
         );
         Arrays.asList(0.1D, 1.0D, 1.5D, 5.0D, 9.99D).forEach(num -> {

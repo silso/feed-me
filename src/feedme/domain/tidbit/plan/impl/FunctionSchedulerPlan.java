@@ -1,19 +1,19 @@
 package feedme.domain.tidbit.plan.impl;
 
-import feedme.domain.tidbit.plan.TidbitPlan;
+import feedme.domain.tidbit.plan.TidbitSchedulerPlan;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.function.Function;
 
-public record FunctionPlan(
+public record FunctionSchedulerPlan(
     Function<Duration, Double> getWhiffNum,
     Function<Double, Duration> inverseGetWhiffNum
-) implements TidbitPlan {
+) implements TidbitSchedulerPlan {
 
     @Override
-    public Instant getNextWhiff(Instant currentTime, Duration timeRemaining) {
+    public Instant getNext(Instant currentTime, Duration timeRemaining) {
         if (!timeRemaining.isPositive()) {
             throw new IllegalArgumentException("Time remaining is negative");
         }
@@ -25,12 +25,12 @@ public record FunctionPlan(
     private static final ChronoUnit UNIT = ChronoUnit.HOURS;
 
     private static Duration durationOfFloat(double duration) {
-        long multiplier = FunctionPlan.UNIT.getDuration().dividedBy(ChronoUnit.MILLIS.getDuration());
+        long multiplier = FunctionSchedulerPlan.UNIT.getDuration().dividedBy(ChronoUnit.MILLIS.getDuration());
         return Duration.ofMillis(Math.round(duration * multiplier));
     }
 
     private static double floatOfDuration(Duration duration) {
-        double dividend = FunctionPlan.UNIT.getDuration().dividedBy(ChronoUnit.MILLIS.getDuration());
+        double dividend = FunctionSchedulerPlan.UNIT.getDuration().dividedBy(ChronoUnit.MILLIS.getDuration());
         return (double) duration.toMillis() / dividend;
     }
 
@@ -39,11 +39,11 @@ public record FunctionPlan(
     }
 
     // should add slight offset and scaling to make this work better, and for limit to be accurate
-    public static FunctionPlan exponential(double base, double limit, Duration firstWhiff) {
+    public static FunctionSchedulerPlan exponential(double base, double limit, Duration firstWhiff) {
         // Use function of the form (a * base ^ (-t) + b) for t <= firstWhiff and (-(t - firstWhiff) + 1) for t > firstWhiff
         double a = (1 - limit) / (Math.pow(base, -floatOfDuration(firstWhiff)) - 1);
         double b = limit - a;
-        return new FunctionPlan(
+        return new FunctionSchedulerPlan(
             (timeRemaining) -> {
                 if (!timeRemaining.minus(firstWhiff).isPositive()) {
                     return a * Math.pow(base, -floatOfDuration(timeRemaining)) + b;
