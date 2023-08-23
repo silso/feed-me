@@ -7,7 +7,7 @@ import feedme.domain.tidbit.action.TidbitStateTransition;
 
 public class OnItAction extends TidbitStateTransition {
     @Override
-    public boolean doIsApplicableTo(Tidbit<?> tidbit) {
+    public boolean doIsApplicableTo(Tidbit tidbit) {
         return Tidbit.Type.Task.equals(tidbit.type) && !TaskTidbit.State.OnIt.equals(tidbit.currentState) && !tidbit.currentState.isFinished();
     }
 

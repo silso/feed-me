@@ -15,6 +15,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 
+/**
+ * Create tasks and pester the user to do them. After the expiration date, give up.
+ */
 public class TaskSeed extends Seed {
     private final TidbitRepository repository;
 

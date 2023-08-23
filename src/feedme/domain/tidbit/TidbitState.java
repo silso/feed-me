@@ -2,7 +2,10 @@ package feedme.domain.tidbit;
 
 import org.jetbrains.annotations.NotNull;
 
-// fake enum
+/**
+ * @see Tidbit
+ * This is a fake enum class that is used for {@link Tidbit} and enables inheritance.
+ */
 public class TidbitState {
     public static final TidbitState New = new TidbitState("New");
     public static final TidbitState Visible = new TidbitState("Visible");

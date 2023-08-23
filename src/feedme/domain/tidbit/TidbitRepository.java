@@ -8,28 +8,30 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Interface for storing, retrieving, and modifying tidbits. Currently, the tidbits are stored in memory.
+ */
 public class TidbitRepository {
-    private final Map<Integer, Tidbit<?>> store = new HashMap<>();
+    private final Map<Integer, Tidbit> store = new HashMap<>();
 
     private int count = 0;
 
-    public int addTidbit(Tidbit<?> tidbit) {
+    public int addTidbit(Tidbit tidbit) {
         store.put(++count, tidbit);
         return count;
     }
 
-    public <TidbitType extends Tidbit<?>> Optional<TidbitType> getTidbit(int id, Class<TidbitType> tidbitType) {
+    public <TidbitType extends Tidbit> Optional<TidbitType> getTidbit(int id, Class<TidbitType> tidbitType) {
         return getTidbit(id).map(tidbitType::cast);
     }
 
-    public Optional<Tidbit<?>> getTidbit(int id) {
+    public Optional<Tidbit> getTidbit(int id) {
         return Optional.ofNullable(store.get(id));
     }
 
-    public <TidbitType extends Tidbit<?>> Map<Integer, TidbitType> getTidbitsForSeed(@NotNull Seed seed, Class<TidbitType> tidbitType) {
+    public <TidbitType extends Tidbit> Map<Integer, TidbitType> getTidbitsForSeed(@NotNull Seed seed, Class<TidbitType> tidbitType) {
         return store
             .entrySet()
             .stream()
@@ -38,17 +40,17 @@ public class TidbitRepository {
             .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, entry -> tidbitType.cast(entry.getValue())));
     }
 
-    public boolean putTidbit(int id, Tidbit<?> tidbit) {
+    public boolean putTidbit(int id, Tidbit tidbit) {
         return store.put(id, tidbit) != null;
     }
 
-    public <TidbitType extends Tidbit<?>> boolean applyActionToTidbit(int id, TidbitAction action, Instant now, Class<TidbitType> tidbitType) throws TidbitActionException {
+    public <TidbitType extends Tidbit> boolean applyActionToTidbit(int id, TidbitAction action, Instant now, Class<TidbitType> tidbitType) throws TidbitActionException {
         TidbitType oldTidbit = tidbitType.cast(store.get(id));
         TidbitType newTidbit = action.apply(oldTidbit, now);
         return store.put(id, newTidbit) != null;
     }
 
-    public void forEach(BiConsumer<Integer, Tidbit<?>> consumer) {
+    public void forEach(BiConsumer<Integer, Tidbit> consumer) {
         store.forEach(consumer);
     }
 

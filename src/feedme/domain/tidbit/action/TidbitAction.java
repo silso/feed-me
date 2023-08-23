@@ -1,11 +1,12 @@
 package feedme.domain.tidbit.action;
 
 import feedme.domain.tidbit.Tidbit;
-import feedme.domain.tidbit.action.impl.ConsumeAction;
 
 import java.time.Instant;
-import java.util.function.Function;
 
+/**
+ * Ugly class for carrying out actions on tidbits
+ */
 public abstract class TidbitAction {
     private Instant occurredAt;
     private boolean applied = false;
@@ -14,13 +15,13 @@ public abstract class TidbitAction {
         return occurredAt;
     }
 
-    public boolean isApplicableTo(Tidbit<?> tidbit) {
+    public boolean isApplicableTo(Tidbit tidbit) {
         return tidbit.availableActions().contains(this.getClass()) && doIsApplicableTo(tidbit);
     }
 
-    public abstract boolean doIsApplicableTo(Tidbit<?> tidbit);
+    public abstract boolean doIsApplicableTo(Tidbit tidbit);
 
-    public <TidbitType extends Tidbit<?>> TidbitType apply(TidbitType tidbit, Instant now) throws TidbitActionException {
+    public <TidbitType extends Tidbit> TidbitType apply(TidbitType tidbit, Instant now) throws TidbitActionException {
         if (!isApplicableTo(tidbit)) {
             throw new TidbitActionException("Action " + this + " isn't applicable to " + tidbit);
         }
@@ -33,5 +34,5 @@ public abstract class TidbitAction {
         return doApply(tidbit);
     }
 
-    public abstract <TidbitType extends Tidbit<?>> TidbitType doApply(TidbitType tidbit);
+    public abstract <TidbitType extends Tidbit> TidbitType doApply(TidbitType tidbit);
 }

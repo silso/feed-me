@@ -6,7 +6,7 @@ import feedme.domain.tidbit.action.TidbitStateTransition;
 
 public class EmitAction extends TidbitStateTransition {
     @Override
-    public boolean doIsApplicableTo(Tidbit<?> tidbit) {
+    public boolean doIsApplicableTo(Tidbit tidbit) {
         return true;
     }
 
