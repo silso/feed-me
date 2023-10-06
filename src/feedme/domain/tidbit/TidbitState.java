@@ -31,6 +31,13 @@ public class TidbitState {
         return name.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return "TidbitState{" +
+            "name='" + name + '\'' +
+            '}';
+    }
+
     public boolean isFinished() {
         return Consumed.equals(this) || Expired.equals(this);
     }

@@ -21,8 +21,16 @@ public class TaskTidbit extends Tidbit {
         super(createdAt, currentState, history, message, Type.Task, seed);
     }
 
-    public Set<Class<? extends TidbitAction>> availableActions() {
-        Set<Class<? extends TidbitAction>> actions = new HashSet<>(super.availableActions());
+    @Override
+    public Set<Class<? extends TidbitAction>> allowedActions() {
+        Set<Class<? extends TidbitAction>> actions = new HashSet<>(super.allowedActions());
+        actions.add(OnItAction.class);
+        return Collections.unmodifiableSet(actions);
+    }
+
+    @Override
+    public Set<Class<? extends TidbitAction>> allowedUserActions() {
+        Set<Class<? extends TidbitAction>> actions = new HashSet<>(super.allowedUserActions());
         actions.add(OnItAction.class);
         return Collections.unmodifiableSet(actions);
     }

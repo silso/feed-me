@@ -43,11 +43,17 @@ public abstract class Tidbit {
         this.seed = seed;
     }
 
-    public Set<Class<? extends TidbitAction>> availableActions() {
+    public Set<Class<? extends TidbitAction>> allowedActions() {
         return Set.of(
             EmitAction.class,
             ConsumeAction.class,
             ExpireAction.class
+        );
+    }
+
+    public Set<Class<? extends TidbitAction>> allowedUserActions() {
+        return Set.of(
+            ConsumeAction.class
         );
     }
 
@@ -56,7 +62,6 @@ public abstract class Tidbit {
         return "Tidbit{" +
             "createdAt=" + createdAt +
             ", currentState=" + currentState +
-            ", history=" + history +
             ", message='" + message + '\'' +
             '}';
     }

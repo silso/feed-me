@@ -16,7 +16,7 @@ public abstract class TidbitAction {
     }
 
     public boolean isApplicableTo(Tidbit tidbit) {
-        return tidbit.availableActions().contains(this.getClass()) && doIsApplicableTo(tidbit);
+        return tidbit.allowedActions().contains(this.getClass()) && doIsApplicableTo(tidbit);
     }
 
     public abstract boolean doIsApplicableTo(Tidbit tidbit);

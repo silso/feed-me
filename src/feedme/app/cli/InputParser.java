@@ -1,4 +1,4 @@
-package feedme.app;
+package feedme.app.cli;
 
 import java.util.ArrayList;
 import java.util.Collections;

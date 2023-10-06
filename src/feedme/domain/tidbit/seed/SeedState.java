@@ -24,4 +24,11 @@ public class SeedState {
     public int hashCode() {
         return name.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "SeedState{" +
+            "name='" + name + '\'' +
+            '}';
+    }
 }

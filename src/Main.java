@@ -1,4 +1,4 @@
-import feedme.app.CliService;
+import feedme.app.cli.CliService;
 
 public class Main {
     public static void main(String[] args) {
