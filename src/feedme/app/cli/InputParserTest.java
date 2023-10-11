@@ -22,6 +22,7 @@ class InputParserTest {
         List<String> expected = List.of("word1", "2word", "3");
         assertIterableEquals(expected, (new InputParser(3, false, true)).parse(input));
         assertIterableEquals(expected, (new InputParser(3, true, true)).parse(input));
+        assertEquals("word1", new InputParser(2, true, false, true).parse(input).get(0));
         assertThrows(InputParser.InputParserException.class, () -> (new InputParser(2, true, true)).parse(input));
         assertThrows(InputParser.InputParserException.class, () -> (new InputParser(4, false, true)).parse(input));
     }

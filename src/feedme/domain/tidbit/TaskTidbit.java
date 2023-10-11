@@ -41,5 +41,10 @@ public class TaskTidbit extends Tidbit {
         protected State(String name) {
             super(name);
         }
+
+        @Override
+        public boolean isVisible() {
+            return super.isVisible() || OnIt.equals(this);
+        }
     }
 }

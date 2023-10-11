@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 public class SeedService {
     private final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
-    private static final int POLL_RATE_SECONDS = 60;
+    private static final int POLL_RATE_MILLISECONDS = 5;
 
     private final SeedRepository seeds;
 
@@ -17,7 +17,7 @@ public class SeedService {
     }
 
     public void start() {
-        service.schedule(this::poll, POLL_RATE_SECONDS, TimeUnit.SECONDS);
+        service.scheduleAtFixedRate(this::poll, 0, POLL_RATE_MILLISECONDS, TimeUnit.MILLISECONDS);
     }
 
     private void poll() {

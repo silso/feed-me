@@ -11,6 +11,7 @@ public class InputParser {
     private final int paramCount;
     private final boolean enableQuotationMarks;
     private final boolean parseEntireInput;
+    private final boolean allowLessThanParamCount;
 
     private final Set<Character> QUOTATION_MARK_CHARS = Set.of('"');
     private final char DELIMITER = ' ';
@@ -24,9 +25,14 @@ public class InputParser {
     }
 
     public InputParser(int paramCount, boolean enableQuotationMarks, boolean parseEntireInput) {
+        this(paramCount, enableQuotationMarks, parseEntireInput, false);
+    }
+
+    public InputParser(int paramCount, boolean enableQuotationMarks, boolean parseEntireInput, boolean allowLessThanParamCount) {
         this.paramCount = paramCount;
         this.enableQuotationMarks = enableQuotationMarks;
         this.parseEntireInput = parseEntireInput;
+        this.allowLessThanParamCount = allowLessThanParamCount;
     }
 
     public List<String> parse(String input) throws InputParserException {
@@ -36,7 +42,7 @@ public class InputParser {
         } else {
             splitInput = Stream.of(input.trim().split("%s+".formatted(DELIMITER), paramCount)).filter(Predicate.not(String::isBlank)).toList();
         }
-        if (splitInput.size() < paramCount || (parseEntireInput && splitInput.size() > paramCount)) {
+        if ((!allowLessThanParamCount && splitInput.size() < paramCount) || (parseEntireInput && splitInput.size() > paramCount)) {
             throw new InputParserException("Unaccepted input size: '%d'".formatted(splitInput.size()));
         }
         return splitInput;

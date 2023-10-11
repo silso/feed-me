@@ -1,5 +1,6 @@
 package feedme.domain.tidbit;
 
+import com.google.common.base.Objects;
 import feedme.domain.tidbit.action.TidbitAction;
 import feedme.domain.tidbit.action.impl.ConsumeAction;
 import feedme.domain.tidbit.action.impl.EmitAction;
@@ -55,6 +56,18 @@ public abstract class Tidbit {
         return Set.of(
             ConsumeAction.class
         );
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Tidbit tidbit)) return false;
+        return Objects.equal(createdAt, tidbit.createdAt) && Objects.equal(currentState, tidbit.currentState) && Objects.equal(history, tidbit.history) && Objects.equal(message, tidbit.message) && type == tidbit.type && Objects.equal(seed, tidbit.seed);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(createdAt, currentState, history, message, type, seed);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package feedme.domain.tidbit.seed.impl;
 
+import com.google.common.base.Objects;
 import feedme.domain.tidbit.TaskTidbit;
 import feedme.domain.tidbit.TidbitHistory;
 import feedme.domain.tidbit.TidbitRepository;
@@ -97,6 +98,10 @@ public class TaskSeed extends Seed {
                         }
                         seed.currentState = State.TidbitEmitted;
                     })
+                .when((input) -> TaskTidbit.State.OnIt.equals(repository.getTidbit(input.seed().currentlyEmittedTidbit.id).orElseThrow().currentState))
+                    .then((input) -> input.seed().currentState = State.TidbitOnIt)
+                .when((input) -> TaskTidbit.State.Consumed.equals(repository.getTidbit(input.seed().currentlyEmittedTidbit.id).orElseThrow().currentState))
+                    .then((input) -> input.seed().currentState = State.TidbitConsumed)
             .whenAt(State.TidbitOnIt)
                 .when((input) -> input.time().isAfter(input.seed().currentlyEmittedTidbit.time().plus(onItTime)))
                     .then((input) -> {
@@ -137,6 +142,18 @@ public class TaskSeed extends Seed {
     private record TaskSeedWithTime(TaskSeed seed, Instant time) {}
 
     private record TidbitRef(int id, Instant time) {}
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TaskSeed seed)) return false;
+        return Objects.equal(repository, seed.repository) && Objects.equal(instruction, seed.instruction) && Objects.equal(expiresAt, seed.expiresAt) && Objects.equal(currentState, seed.currentState) && Objects.equal(nextScheduledTidbit, seed.nextScheduledTidbit) && Objects.equal(currentlyEmittedTidbit, seed.currentlyEmittedTidbit) && Objects.equal(stateMachine, seed.stateMachine);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(repository, instruction, expiresAt, currentState, nextScheduledTidbit, currentlyEmittedTidbit, stateMachine);
+    }
 
     @Override
     public String toString() {

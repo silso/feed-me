@@ -27,8 +27,6 @@ public class SeedState {
 
     @Override
     public String toString() {
-        return "SeedState{" +
-            "name='" + name + '\'' +
-            '}';
+        return name;
     }
 }

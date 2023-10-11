@@ -33,9 +33,11 @@ public class TidbitState {
 
     @Override
     public String toString() {
-        return "TidbitState{" +
-            "name='" + name + '\'' +
-            '}';
+        return name;
+    }
+
+    public boolean isVisible() {
+        return Visible.equals(this);
     }
 
     public boolean isFinished() {

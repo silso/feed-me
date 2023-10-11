@@ -6,7 +6,10 @@ import feedme.domain.tidbit.seed.Seed;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -17,21 +20,22 @@ public class TidbitRepository {
     private final Map<Integer, Tidbit> store = new HashMap<>();
 
     private int count = 0;
+    private int lastHashCode;
 
-    public int addTidbit(Tidbit tidbit) {
+    public synchronized int addTidbit(Tidbit tidbit) {
         store.put(++count, tidbit);
         return count;
     }
 
-    public <TidbitType extends Tidbit> Optional<TidbitType> getTidbit(int id, Class<TidbitType> tidbitType) {
+    public synchronized <TidbitType extends Tidbit> Optional<TidbitType> getTidbit(int id, Class<TidbitType> tidbitType) {
         return getTidbit(id).map(tidbitType::cast);
     }
 
-    public Optional<Tidbit> getTidbit(int id) {
+    public synchronized Optional<Tidbit> getTidbit(int id) {
         return Optional.ofNullable(store.get(id));
     }
 
-    public <TidbitType extends Tidbit> Map<Integer, TidbitType> getTidbitsForSeed(@NotNull Seed seed, Class<TidbitType> tidbitType) {
+    public synchronized <TidbitType extends Tidbit> Map<Integer, TidbitType> getTidbitsForSeed(@NotNull Seed seed, Class<TidbitType> tidbitType) {
         return store
             .entrySet()
             .stream()
@@ -40,18 +44,25 @@ public class TidbitRepository {
             .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, entry -> tidbitType.cast(entry.getValue())));
     }
 
-    public boolean putTidbit(int id, Tidbit tidbit) {
+    public synchronized boolean putTidbit(int id, Tidbit tidbit) {
         return store.put(id, tidbit) != null;
     }
 
-    public <TidbitType extends Tidbit> boolean applyActionToTidbit(int id, TidbitAction action, Instant now, Class<TidbitType> tidbitType) throws TidbitActionException {
+    public synchronized <TidbitType extends Tidbit> boolean applyActionToTidbit(int id, TidbitAction action, Instant now, Class<TidbitType> tidbitType) throws TidbitActionException {
         TidbitType oldTidbit = tidbitType.cast(store.get(id));
         TidbitType newTidbit = action.apply(oldTidbit, now);
         return store.put(id, newTidbit) != null;
     }
 
-    public void forEach(BiConsumer<Integer, Tidbit> consumer) {
+    public synchronized void forEach(BiConsumer<Integer, Tidbit> consumer) {
         store.forEach(consumer);
+    }
+
+    public synchronized boolean hasChanged() {
+        int currentHashCode = Objects.hash(store.entrySet().toArray());
+        boolean hasChanged = lastHashCode != currentHashCode;
+        lastHashCode = currentHashCode;
+        return hasChanged;
     }
 
     public static class TidbitRepositoryException extends Exception{}
