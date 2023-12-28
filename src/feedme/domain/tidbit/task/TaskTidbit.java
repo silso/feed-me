@@ -1,8 +1,12 @@
-package feedme.domain.tidbit;
+package feedme.domain.tidbit.task;
 
+import feedme.domain.tidbit.Tidbit;
+import feedme.domain.tidbit.TidbitHistory;
+import feedme.domain.tidbit.TidbitState;
 import feedme.domain.tidbit.action.TidbitAction;
 import feedme.domain.tidbit.action.impl.OnItAction;
 import feedme.domain.tidbit.seed.Seed;
+import feedme.domain.tidbit.urgency.Urgency;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -16,9 +20,10 @@ public class TaskTidbit extends Tidbit {
         TidbitState currentState,
         TidbitHistory history,
         String message,
-        Seed seed
+        Seed seed,
+        Urgency urgency
     ) {
-        super(createdAt, currentState, history, message, Type.Task, seed);
+        super(createdAt, currentState, history, message, seed, urgency);
     }
 
     @Override

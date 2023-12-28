@@ -45,7 +45,14 @@ public class ActionService {
     }
 
     public String getAllowedActionsForTidbit(Tidbit tidbit) {
-        List<String> actionStrings = tidbit.allowedUserActions().stream().map(action -> ACTIONS.inverse().get(action)).toList();
+        List<String> actionStrings = tidbit.allowedUserActions().stream().filter(actionClass -> {
+            try {
+                return actionClass.getDeclaredConstructor().newInstance().isApplicableTo(tidbit);
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                     NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }).map(action -> ACTIONS.inverse().get(action)).toList();
         return Joiner.on(", ").join(actionStrings);
     }
 

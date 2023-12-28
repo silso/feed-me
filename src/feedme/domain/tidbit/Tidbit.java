@@ -6,6 +6,7 @@ import feedme.domain.tidbit.action.impl.ConsumeAction;
 import feedme.domain.tidbit.action.impl.EmitAction;
 import feedme.domain.tidbit.action.impl.ExpireAction;
 import feedme.domain.tidbit.seed.Seed;
+import feedme.domain.tidbit.urgency.Urgency;
 
 import java.time.Instant;
 import java.util.Set;
@@ -25,23 +26,16 @@ public abstract class Tidbit {
     public TidbitState currentState;
     public final TidbitHistory history;
     public String message;
-    public final Tidbit.Type type;
     public final Seed seed;
+    public final Urgency urgency;
 
-    public Tidbit(
-        Instant createdAt,
-        TidbitState currentState,
-        TidbitHistory history,
-        String message,
-        Tidbit.Type type,
-        Seed seed
-    ) {
+    public Tidbit(Instant createdAt, TidbitState currentState, TidbitHistory history, String message, Seed seed, Urgency urgency) {
         this.createdAt = createdAt;
         this.currentState = currentState;
         this.history = history;
         this.message = message;
-        this.type = type;
         this.seed = seed;
+        this.urgency = urgency;
     }
 
     public Set<Class<? extends TidbitAction>> allowedActions() {
@@ -62,12 +56,12 @@ public abstract class Tidbit {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Tidbit tidbit)) return false;
-        return Objects.equal(createdAt, tidbit.createdAt) && Objects.equal(currentState, tidbit.currentState) && Objects.equal(history, tidbit.history) && Objects.equal(message, tidbit.message) && type == tidbit.type && Objects.equal(seed, tidbit.seed);
+        return Objects.equal(createdAt, tidbit.createdAt) && Objects.equal(currentState, tidbit.currentState) && Objects.equal(history, tidbit.history) && Objects.equal(message, tidbit.message) && Objects.equal(seed, tidbit.seed) && Objects.equal(urgency, tidbit.urgency);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(createdAt, currentState, history, message, type, seed);
+        return Objects.hashCode(createdAt, currentState, history, message, seed, urgency);
     }
 
     @Override
@@ -77,15 +71,5 @@ public abstract class Tidbit {
             ", currentState=" + currentState +
             ", message='" + message + '\'' +
             '}';
-    }
-
-    public enum Type {
-        Base("Base"),
-        Task("Task");
-
-        public final String name;
-        Type(String name) {
-            this.name = name;
-        }
     }
 }

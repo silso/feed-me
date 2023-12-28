@@ -6,7 +6,7 @@ import feedme.domain.tidbit.TidbitRepository;
 import feedme.domain.tidbit.seed.Seed;
 import feedme.domain.tidbit.seed.SeedRepository;
 import feedme.domain.tidbit.seed.SeedService;
-import feedme.domain.tidbit.seed.impl.TaskSeed;
+import feedme.domain.tidbit.task.SimpleStatefulTaskSeed;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -167,7 +167,7 @@ public class CliService {
         }
         String expirationTimeInput = splitInput.get(2);
         String onItTimeInput = splitInput.get(3);
-        Seed newSeed = new TaskSeed(
+        Seed newSeed = new SimpleStatefulTaskSeed(
             instruction,
             expiresAt,
             tidbits,

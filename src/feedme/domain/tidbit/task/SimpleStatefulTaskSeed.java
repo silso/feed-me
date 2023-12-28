@@ -1,14 +1,13 @@
-package feedme.domain.tidbit.seed.impl;
+package feedme.domain.tidbit.task;
 
 import com.google.common.base.Objects;
-import feedme.domain.tidbit.TaskTidbit;
 import feedme.domain.tidbit.TidbitHistory;
 import feedme.domain.tidbit.TidbitRepository;
 import feedme.domain.tidbit.action.TidbitActionException;
 import feedme.domain.tidbit.action.impl.EmitAction;
 import feedme.domain.tidbit.action.impl.ExpireAction;
-import feedme.domain.tidbit.seed.Seed;
 import feedme.domain.tidbit.seed.SeedState;
+import feedme.domain.tidbit.urgency.BuiltinUrgency;
 import feedme.util.Fsm;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,11 +18,7 @@ import java.util.ArrayList;
 /**
  * Create tasks and pester the user to do them. After the expiration date, give up.
  */
-public class TaskSeed extends Seed {
-    private final TidbitRepository repository;
-
-    public final String instruction;
-    public final Instant expiresAt;
+public class SimpleStatefulTaskSeed extends TaskSeed {
 
     // parts of state
     @NotNull
@@ -33,10 +28,8 @@ public class TaskSeed extends Seed {
 
     private final Fsm<SeedState, TaskSeedWithTime> stateMachine;
 
-    public TaskSeed(String instruction, Instant expiresAt, TidbitRepository repository, Duration expirationTime, Duration onItTime) {
-        this.instruction = instruction;
-        this.expiresAt = expiresAt;
-        this.repository = repository;
+    public SimpleStatefulTaskSeed(String instruction, Instant expiresAt, TidbitRepository repository, Duration expirationTime, Duration onItTime) {
+        super(repository, instruction, expiresAt);
         this.stateMachine = createStateMachine(
             expiresAt.minus(Duration.ofHours(1)),
             expirationTime,
@@ -52,7 +45,7 @@ public class TaskSeed extends Seed {
         return Fsm.<SeedState, TaskSeedWithTime>create()
             .whenAt(State.New)
                 .always((input) -> {
-                    TaskSeed seed = input.seed();
+                    SimpleStatefulTaskSeed seed = input.seed();
                     Instant scheduledTime = firstTidbitTime;
                     if (input.time().isAfter(firstTidbitTime)) {
                         scheduledTime = input.time();
@@ -64,7 +57,7 @@ public class TaskSeed extends Seed {
                 .when((input) -> input.time().isAfter(input.seed().nextScheduledTidbit.time()))
                     .then((input) -> {
                         // emit tidbit
-                        TaskSeed seed = input.seed();
+                        SimpleStatefulTaskSeed seed = input.seed();
                         try {
                             seed.repository.applyActionToTidbit(seed.nextScheduledTidbit.id(), new EmitAction(), input.time(), TaskTidbit.class);
                         } catch (TidbitActionException e) {
@@ -77,7 +70,7 @@ public class TaskSeed extends Seed {
                 .when((input) -> input.time().isAfter(input.seed().expiresAt))
                     .then((input) -> {
                         // seed expired
-                        TaskSeed seed = input.seed();
+                        SimpleStatefulTaskSeed seed = input.seed();
                         try {
                             seed.repository.applyActionToTidbit(seed.currentlyEmittedTidbit.id(), new ExpireAction(), input.time(), TaskTidbit.class);
                         } catch (TidbitActionException e) {
@@ -88,7 +81,7 @@ public class TaskSeed extends Seed {
                 .when((input) -> input.time().isAfter(input.seed().currentlyEmittedTidbit.time().plus(expirationTime)))
                     .then((input) -> {
                         // tidbit expired
-                        TaskSeed seed = input.seed();
+                        SimpleStatefulTaskSeed seed = input.seed();
                         try {
                             seed.repository.applyActionToTidbit(seed.currentlyEmittedTidbit.id(), new ExpireAction(), input.time(), TaskTidbit.class);
                             seed.currentlyEmittedTidbit = new TidbitRef(seed.addTidbit(input.time(), seed.instruction), input.time());
@@ -106,7 +99,7 @@ public class TaskSeed extends Seed {
                 .when((input) -> input.time().isAfter(input.seed().currentlyEmittedTidbit.time().plus(onItTime)))
                     .then((input) -> {
                         // tidbit expired
-                        TaskSeed seed = input.seed();
+                        SimpleStatefulTaskSeed seed = input.seed();
                         try {
                             seed.repository.applyActionToTidbit(seed.currentlyEmittedTidbit.id(), new ExpireAction(), input.time(), TaskTidbit.class);
                             seed.currentlyEmittedTidbit = new TidbitRef(seed.addTidbit(input.time(), seed.instruction), input.time());
@@ -125,7 +118,8 @@ public class TaskSeed extends Seed {
             TaskTidbit.State.New,
             new TidbitHistory(new ArrayList<>()),
             instruction,
-            this
+            this,
+            BuiltinUrgency.Push.urgency
         ));
     }
 
@@ -139,14 +133,30 @@ public class TaskSeed extends Seed {
         }
     }
 
-    private record TaskSeedWithTime(TaskSeed seed, Instant time) {}
+//
+//    public static TaskSeed fromInputs1(String instruction, Instant expiresAt, TaskPriority priority, Duration taskTime, Schedule<TaskScheduleState> schedule, TidbitRepository tidbitRepository, Duration lastTidbitBuffer, Duration firstTidbitBuffer) {
+//        int tidbitCount = switch (priority) {
+//            case Critical -> 10;
+//            case Major -> 5;
+//            case Minor -> 3;
+//        };
+//        Instant lastTidbitTime = expiresAt.minus(lastTidbitBuffer);
+//        Duration expirationTime = taskTime.plus(TimeUtils.multiply(taskTime, switch (priority) {
+//            case Critical -> 1.5;
+//            case Major -> 1.2;
+//            case Minor -> 1.0;
+//        }));
+//        return new TaskSeed(instruction, expiresAt, tidbitRepository);
+//    }
+
+    private record TaskSeedWithTime(SimpleStatefulTaskSeed seed, Instant time) {}
 
     private record TidbitRef(int id, Instant time) {}
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TaskSeed seed)) return false;
+        if (!(o instanceof SimpleStatefulTaskSeed seed)) return false;
         return Objects.equal(repository, seed.repository) && Objects.equal(instruction, seed.instruction) && Objects.equal(expiresAt, seed.expiresAt) && Objects.equal(currentState, seed.currentState) && Objects.equal(nextScheduledTidbit, seed.nextScheduledTidbit) && Objects.equal(currentlyEmittedTidbit, seed.currentlyEmittedTidbit) && Objects.equal(stateMachine, seed.stateMachine);
     }
 

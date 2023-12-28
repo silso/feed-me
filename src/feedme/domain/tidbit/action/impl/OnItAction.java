@@ -1,6 +1,6 @@
 package feedme.domain.tidbit.action.impl;
 
-import feedme.domain.tidbit.TaskTidbit;
+import feedme.domain.tidbit.task.TaskTidbit;
 import feedme.domain.tidbit.Tidbit;
 import feedme.domain.tidbit.TidbitState;
 import feedme.domain.tidbit.action.TidbitStateTransition;
@@ -8,7 +8,7 @@ import feedme.domain.tidbit.action.TidbitStateTransition;
 public class OnItAction extends TidbitStateTransition {
     @Override
     public boolean doIsApplicableTo(Tidbit tidbit) {
-        return Tidbit.Type.Task.equals(tidbit.type) && !TaskTidbit.State.OnIt.equals(tidbit.currentState) && !tidbit.currentState.isFinished();
+        return !TaskTidbit.State.OnIt.equals(tidbit.currentState) && !tidbit.currentState.isFinished();
     }
 
     @Override
