@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,11 +15,13 @@ class TimeSetTest {
     public void testInstantTimeSpan() {
         Instant time1 = Instant.ofEpochMilli(1700471244096L);
         Instant time2 = Instant.ofEpochMilli(1701471266063L);
-        for (Instant time : List.of(Instant.MIN, time1, Instant.now(), Instant.MAX.minusNanos(1))) {
+        for (Instant time : List.of(Instant.MIN, time1, Instant.now(), Instant.MAX)) {
             TimeSpan timeSpan = TimeSpan.ofInstant(time);
             assertTrue(timeSpan.getAt(time).isPresent());
             assertTrue(timeSpan.contains(time));
             assertFalse(timeSpan.contains(time2));
+            assertEquals(timeSpan.getFirst(), Optional.of(TimeSpan.ofInstant(time)));
+            assertEquals(timeSpan.getLast(), Optional.of(TimeSpan.ofInstant(time)));
         }
         TimeSpan timeSpan = TimeSpan.ofInstant(time2);
         assertEquals(TimeSpan.ofInstant(time2), timeSpan.getNext(time1).orElseThrow());
@@ -46,6 +49,8 @@ class TimeSetTest {
         // notice touching time spans are contiguous
         assertTrue(timeSpan.isContiguousWith(TimeSpan.ofInstant(time2)));
         assertFalse(timeSpan.isContiguousWith(TimeSpan.ofInstant(time2.plusMillis(1))));
+        assertEquals(timeSpan.getFirst(), Optional.of(timeSpan));
+        assertEquals(timeSpan.getLast(), Optional.of(timeSpan));
 
         Instant justBeforeTime1 = time1.minusNanos(1);
         Instant justAfterTime1 = time1.plusNanos(1);

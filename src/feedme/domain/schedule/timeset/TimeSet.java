@@ -156,6 +156,16 @@ public interface TimeSet {
         TimeSet thisSet = this;
         return new MeasurableTimeSet() {
             @Override
+            public Optional<TimeSpan> getFirst() {
+                return thisSet.getNextInclusive(other.startTime());
+            }
+
+            @Override
+            public Optional<TimeSpan> getLast() {
+                return thisSet.getPreviousInclusive(other.endTime());
+            }
+
+            @Override
             public Optional<TimeSpan> getPrevious(Instant time) {
                 if (other.getAt(time).isPresent()) {
                     return thisSet.getPrevious(time).map(other::intersectWithTimeSpan).flatMap(set -> set.getPrevious(time));
@@ -289,6 +299,16 @@ public interface TimeSet {
         @Override
         public MeasurableTimeSet intersectWithTimeSpan(TimeSpan other) {
             return TimeSet.EMPTY;
+        }
+
+        @Override
+        public Optional<TimeSpan> getFirst() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<TimeSpan> getLast() {
+            return Optional.empty();
         }
 
         @Override

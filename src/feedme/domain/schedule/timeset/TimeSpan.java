@@ -103,6 +103,16 @@ public class TimeSpan implements MeasurableTimeSet {
     }
 
     @Override
+    public Optional<TimeSpan> getFirst() {
+        return Optional.of(this);
+    }
+
+    @Override
+    public Optional<TimeSpan> getLast() {
+        return Optional.of(this);
+    }
+
+    @Override
     public Duration getDuration() {
         return Duration.between(startTime(), endTime());
     }
