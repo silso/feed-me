@@ -119,6 +119,16 @@ public class FiniteTimeSet implements MutableTimeSet, MeasurableTimeSet {
     }
 
     @Override
+    public Optional<TimeSpan> getFirst() {
+        return Optional.ofNullable(spansByStartTime.pollFirst());
+    }
+
+    @Override
+    public Optional<TimeSpan> getLast() {
+        return Optional.ofNullable(spansByEndTime.pollLast());
+    }
+
+    @Override
     public Duration getDuration() {
         return spansByStartTime.stream().map(TimeSpan::getDuration).reduce(Duration.ZERO, Duration::plus);
     }
