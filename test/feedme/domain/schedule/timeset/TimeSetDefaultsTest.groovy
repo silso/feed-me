@@ -166,6 +166,7 @@ class TimeSetDefaultsTest extends Specification {
         }
     }
 
+    // TODO: 1 nanosecond timespans don't seem to work here right now
     def "invert FiniteTimeSet"() {
         given:
         def inputSet = new FiniteTimeSet();
@@ -194,5 +195,17 @@ class TimeSetDefaultsTest extends Specification {
         -5    | 5     | 6     | 10    | 10    || true  | 5     | 6     | true  | 10    | MAX   | false | 0     | 0
         -5    | 5     | 6     | 10    | 11    || true  | 5     | 6     | true  | 10    | MAX   | false | 0     | 0
         -5    | 5     | 6     | 10    | MAX   || true  | 5     | 6     | true  | 10    | MAX   | false | 0     | 0
+        -15   | -10   | -5    | -3    | MIN   || false | 0     | 0     | true  | MIN   | -15   | true  | -10   | -5
+        -15   | -10   | -5    | -3    | -16   || false | 0     | 0     | true  | MIN   | -15   | true  | -10   | -5
+        -15   | -10   | -5    | -3    | -15   || true  | MIN   | -15   | false | 0     | 0     | true  | -10   | -5
+        -15   | -10   | -5    | -3    | -14   || true  | MIN   | -15   | false | 0     | 0     | true  | -10   | -5
+        -15   | -10   | -5    | -3    | -10   || true  | MIN   | -15   | true  | -10   | -5    | true  | -3    | MAX
+        -15   | -10   | -5    | -3    | -6    || true  | MIN   | -15   | true  | -10   | -5    | true  | -3    | MAX
+        -15   | -10   | -5    | -3    | -5    || true  | -10   | -5    | false | 0     | 0     | true  | -3    | MAX
+        -15   | -10   | -5    | -3    | -3    || true  | -10   | -5    | true  | -3    | MAX   | false | 0     | 0
+        -15   | -10   | -5    | -3    | -3    || true  | -10   | -5    | true  | -3    | MAX   | false | 0     | 0
+        -15   | -10   | -5    | -3    | 0     || true  | -10   | -5    | true  | -3    | MAX   | false | 0     | 0
+        -15   | -10   | -5    | -3    | 11    || true  | -10   | -5    | true  | -3    | MAX   | false | 0     | 0
+        -15   | -10   | -5    | -3    | MAX   || true  | -10   | -5    | true  | -3    | MAX   | false | 0     | 0
     }
 }
