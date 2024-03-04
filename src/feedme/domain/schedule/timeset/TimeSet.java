@@ -184,7 +184,7 @@ public interface TimeSet {
         };
     }
 
-    default TimeSet difference(TimeSet other) {
+    default TimeSet differenceWith(TimeSet other) {
         return this.intersectWith(other.invert());
     }
 
@@ -294,6 +294,33 @@ public interface TimeSet {
         @Override
         public Duration getDuration() {
             return Duration.ZERO;
+        }
+
+        @Override
+        public TimeSet invert() {
+            return TimeSet.EVERYTHING;
+        }
+    };
+
+    TimeSet EVERYTHING = new TimeSet() {
+        @Override
+        public Optional<TimeSpan> getPrevious(Instant time) throws TimeSetException.Unchecked {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<TimeSpan> getAt(Instant time) throws TimeSetException.Unchecked {
+            return Optional.of(new TimeSpan(Instant.MIN, Instant.MAX));
+        }
+
+        @Override
+        public Optional<TimeSpan> getNext(Instant time) throws TimeSetException.Unchecked {
+            return Optional.empty();
+        }
+
+        @Override
+        public TimeSet invert() {
+            return TimeSet.EMPTY;
         }
     };
 }

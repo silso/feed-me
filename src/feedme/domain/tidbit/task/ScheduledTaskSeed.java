@@ -2,6 +2,8 @@ package feedme.domain.tidbit.task;
 
 import feedme.domain.repository.DerivedWithArgument;
 import feedme.domain.schedule.Schedule;
+import feedme.domain.schedule.timeset.TimeSet;
+import feedme.domain.schedule.timeset.TimeSpan;
 import feedme.domain.tidbit.TidbitHistory;
 import feedme.domain.tidbit.TidbitRepository;
 import feedme.domain.tidbit.TidbitState;
@@ -9,13 +11,12 @@ import feedme.domain.tidbit.action.TidbitActionException;
 import feedme.domain.tidbit.action.impl.EmitAction;
 import feedme.domain.tidbit.plan.impl.ScheduledTidbitPlan;
 import feedme.domain.tidbit.urgency.BuiltinUrgency;
+import feedme.util.TimeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 public class ScheduledTaskSeed extends TaskSeed {
@@ -29,12 +30,30 @@ public class ScheduledTaskSeed extends TaskSeed {
         String instruction,
         Instant expiresAt,
         Schedule<TaskScheduleState> schedule,
-        ScheduledTidbitPlan plan
+        int tidbitCount
     ) {
         super(repository, instruction, expiresAt);
         this.schedule = schedule;
-        this.plan = plan;
         this.tidbitScheduledFor = new TidbitScheduledFor(this).withRepository(repository);
+        this.plan = createPlan(schedule, tidbitCount);
+    }
+
+    private ScheduledTidbitPlan createPlan(Schedule<TaskScheduleState> schedule, int tidbitCount) {
+        Duration offset = Duration.ofMinutes(1);
+        Duration minPeriod = Duration.ofMinutes(5);
+        SortedSet<Instant> scheduledTimes = new TreeSet<>();
+        TimeSet availableTime = schedule.getTimeSetFor(TaskScheduleState.Available).unionWith(TimeSpan.ofInstants(Instant.MIN, expiresAt));
+        Instant currentTime = expiresAt.minus(offset);
+        while (scheduledTimes.size() < tidbitCount) {
+            if (availableTime.contains(currentTime)) {
+                scheduledTimes.add(currentTime);
+                currentTime = currentTime.minus(minPeriod);
+            } else {
+                Instant checkTime = currentTime.minus(minPeriod);
+                currentTime = TimeUtils.earliest(availableTime.getPreviousInclusive(checkTime).map(TimeSpan::lastTime).orElseThrow(), checkTime);
+            }
+        }
+        return new ScheduledTidbitPlan(scheduledTimes);
     }
 
     @Override
@@ -45,15 +64,15 @@ public class ScheduledTaskSeed extends TaskSeed {
             .ifPresent(previousTime -> {
                 tidbitScheduledFor.apply(previousTime).ifPresentOrElse(
                     entry -> {
-                        if (!entry.getValue().currentState.isFinished() && !entry.getValue().currentState.isVisible()) {
-                            try {
-                                repository.applyActionToTidbit(entry.getKey(), new EmitAction(), now, ScheduledTaskTidbit.class);
-                            } catch (TidbitActionException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
+                        int tidbitId = entry.getKey();
+                        ScheduledTaskTidbit tidbit = entry.getValue();
+                        emitTidbit(now, tidbitId, tidbit);
                     },
-                    () -> addTidbit(now, previousTime)
+                    () -> {
+                        addTidbit(now, previousTime);
+                        Map.Entry<Integer, ScheduledTaskTidbit> entry = tidbitScheduledFor.apply(previousTime).orElseThrow();
+                        emitTidbit(previousTime, entry.getKey(), entry.getValue());
+                    }
                 );
             });
         // if the next tidbit doesn't exist
@@ -68,8 +87,18 @@ public class ScheduledTaskSeed extends TaskSeed {
             });
     }
 
-    private void addTidbit(Instant createdAt, Instant scheduledFor) {
-        repository.addTidbit(new ScheduledTaskTidbit(
+    private void emitTidbit(@NotNull Instant now, int tidbitId, ScheduledTaskTidbit tidbit) {
+        if (!tidbit.currentState.isFinished() && !tidbit.currentState.isVisible()) {
+            try {
+                repository.applyActionToTidbit(tidbitId, new EmitAction(), now, ScheduledTaskTidbit.class);
+            } catch (TidbitActionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private int addTidbit(Instant createdAt, Instant scheduledFor) {
+        return repository.addTidbit(new ScheduledTaskTidbit(
             createdAt,
             TidbitState.New,
             new TidbitHistory(new ArrayList<>()),

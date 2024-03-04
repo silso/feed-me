@@ -66,18 +66,71 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library>
+      <library name="groovy-5.0.0-alpha-1" type="groovy-sdk">
+        <properties version="5.0.0-alpha-1" />
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/spock-core-2.4-M1-groovy-4.0.jar!/" />
-          <root url="jar://$MAVEN_REPOSITORY$/org/apache/groovy/groovy/4.0.6/groovy-4.0.6.jar!/" />
-          <root url="jar://$MAVEN_REPOSITORY$/org/junit/platform/junit-platform-engine/1.9.0/junit-platform-engine-1.9.0.jar!/" />
-          <root url="jar://$MAVEN_REPOSITORY$/org/opentest4j/opentest4j/1.2.0/opentest4j-1.2.0.jar!/" />
-          <root url="jar://$MAVEN_REPOSITORY$/org/junit/platform/junit-platform-commons/1.9.0/junit-platform-commons-1.9.0.jar!/" />
-          <root url="jar://$MAVEN_REPOSITORY$/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar!/" />
-          <root url="jar://$MAVEN_REPOSITORY$/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-dateutil-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-jsr223-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-astbuilder-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-datetime-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-cli-picocli-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-cli-commons-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-json-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-groovydoc-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-ginq-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-jmx-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-docgenerator-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-ant-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-contracts-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-macro-library-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-nio-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-servlet-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-console-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-groovysh-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-testng-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-test-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-test-junit5-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-toml-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-templates-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-sql-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-macro-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-swing-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-xml-5.0.0-alpha-1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-typecheckers-5.0.0-alpha-1.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-cli-commons-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-astbuilder-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-dateutil-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-datetime-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-console-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-contracts-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-cli-picocli-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-ant-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-ginq-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-groovydoc-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-jmx-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-groovysh-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-servlet-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-testng-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-sql-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-templates-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-swing-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-test-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-test-junit5-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-toml-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-json-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-typecheckers-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-xml-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-jsr223-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-macro-library-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-nio-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-macro-5.0.0-alpha-1-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/spockframework/spock-core/2.4-M1-groovy-4.0/groovy-docgenerator-5.0.0-alpha-1-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
   </component>
