@@ -53,6 +53,8 @@ public class CliService {
                 status = status.withShouldRun(false);
             }
         }
+
+        System.exit(0);
     }
 
     private void startReaderThread() {

@@ -1,6 +1,7 @@
 plugins {
-    id("java")
-    id("groovy")
+    java
+    groovy
+    application
 }
 
 group = "org.example"
@@ -22,6 +23,15 @@ dependencies {
     testImplementation("org.spockframework:spock-core")
 }
 
+application {
+    mainClass = "feedme.app.Main"
+}
+
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
+    standardOutput = System.out
 }
