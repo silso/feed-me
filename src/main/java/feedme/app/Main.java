@@ -1,3 +1,5 @@
+package feedme.app;
+
 import feedme.app.cli.CliService;
 
 public class Main {

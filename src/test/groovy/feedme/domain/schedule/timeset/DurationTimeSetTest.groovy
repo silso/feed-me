@@ -1,8 +1,6 @@
 package feedme.domain.schedule.timeset
 
-import feedme.domain.schedule.timeset.DurationTimeSet
-import feedme.domain.schedule.timeset.TimeSet
-import feedme.domain.schedule.timeset.TimeSpan
+
 import spock.lang.Specification
 
 import java.time.Duration
