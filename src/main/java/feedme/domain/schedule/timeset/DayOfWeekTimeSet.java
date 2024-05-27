@@ -18,6 +18,10 @@ public class DayOfWeekTimeSet extends DiscretePeriodicTimeSet<DiscretePeriodicTi
         createCountdownFunction(days);
     }
 
+    private DayOfWeek indexToDay(int i) {
+        return DayOfWeek.of(Math.floorMod(i, 7) + 1);
+    }
+
     private void createCountdownFunction(Set<DayOfWeek> days) {
         if (days.isEmpty()) {
             throw new IllegalArgumentException("Can't create TimeSet for no days of the week");
@@ -27,8 +31,8 @@ public class DayOfWeekTimeSet extends DiscretePeriodicTimeSet<DiscretePeriodicTi
         }
 
         for (int i = 0; i < 14; i++) {
-            DayOfWeek yesterday = DayOfWeek.of((i - 1) % 7);
-            DayOfWeek today = DayOfWeek.of(i % 7);
+            DayOfWeek yesterday = indexToDay(i - 1);
+            DayOfWeek today = indexToDay(i);
             if (days.contains(today)) {
                 if (!days.contains(yesterday)) {
                     countdownSinceMap.put(today, 0L);
@@ -49,8 +53,8 @@ public class DayOfWeekTimeSet extends DiscretePeriodicTimeSet<DiscretePeriodicTi
         }
 
         for (int i = 13; i >= 0; i--) {
-            DayOfWeek today = DayOfWeek.of(i % 7);
-            DayOfWeek tomorrow = DayOfWeek.of((i + 1) % 7);
+            DayOfWeek today = indexToDay(i);
+            DayOfWeek tomorrow = indexToDay(i + 1);
             if (days.contains(today)) {
                 if (!days.contains(tomorrow)) {
                     countdownUntilMap.put(today, 0L);

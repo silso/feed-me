@@ -310,7 +310,7 @@ public interface TimeSet {
 
         @Override
         public Optional<TimeSpan> getAt(Instant time) throws TimeSetException.Unchecked {
-            return Optional.of(new TimeSpan(Instant.MIN, Instant.MAX));
+            return Optional.of(TimeSpan.ofInstants(Instant.MIN, Instant.MAX));
         }
 
         @Override
