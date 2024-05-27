@@ -11,13 +11,15 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * The fundamental {@link TimeSet}, defined as the set of all time from (inclusively) the {@link #startTime()} to
  * (exclusively) the {@link #endTime()}. This also has fundamental method implementations for {@link #unionWithTimeSpan(TimeSpan)} and {@link #intersectWithTimeSpan(TimeSpan)}.
  */
 public class TimeSpan implements MeasurableTimeSet {
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("nn").withZone(ZoneId.systemDefault());
     // TODO: these feel weird
     public static TimeSpan MIN = new TimeSpan(Instant.MIN, Instant.MIN) {
         @Override
@@ -90,16 +92,6 @@ public class TimeSpan implements MeasurableTimeSet {
             throw new IllegalArgumentException("Start time and end time cannot be the same");
         }
         return new TimeSpan(startTime, endTime);
-    }
-
-    private static String formatInstant(Instant time) {
-        if (Instant.MIN.equals(time)) {
-            return "MIN";
-        } else if (Instant.MAX.equals(time)) {
-            return "MAX";
-        } else {
-            return formatter.format(time);
-        }
     }
 
     @Override
@@ -214,8 +206,16 @@ public class TimeSpan implements MeasurableTimeSet {
     @Override
     public String toString() {
         return "TimeSpan{" +
-            formatInstant(startTime()) +
-            "-" + formatInstant(endTime()) +
-            '}';
+            startTime() +
+            "-" + endTime() +
+            " (" +format(startTime()) +
+            "-" + format(endTime()) +
+            ")}";
+    }
+
+    // TODO: fix with proper string conversion. This is a temporary fix since formatter injection
+    // currently doesn't work with spock for some reason
+    private String format(Instant time) {
+        return time.atZone(TimeZone.getDefault().toZoneId()).getDayOfWeek().toString();
     }
 }

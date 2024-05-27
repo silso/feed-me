@@ -10,7 +10,20 @@ public abstract class DiscretePeriodicTimeSet<DiscreteTime extends DiscretePerio
 
     @Override
     public Optional<TimeSpan> getPrevious(Instant time) throws TimeSetException.Unchecked {
-        return Optional.empty();
+        DiscreteTime discreteTime = toDiscrete(time);
+        DiscreteTime startTime;
+        DiscreteTime endTime;
+        long stepsSince = stepsSince(discreteTime);
+        if (stepsSince <= 0) {
+            DiscreteTime timeToCheckFrom = discreteTime.minus(-stepsSince).minus(1);
+            endTime = timeToCheckFrom.minus(stepsSince(timeToCheckFrom));
+        } else {
+            endTime = discreteTime.minus(stepsSince);
+        }
+
+        startTime = endTime.minus(-stepsSince(endTime));
+
+        return Optional.of(TimeSpan.ofInstants(startTime.getStart(), endTime.getEnd()));
     }
 
     @Override
@@ -49,6 +62,15 @@ public abstract class DiscretePeriodicTimeSet<DiscreteTime extends DiscretePerio
     }
 
     protected abstract DiscreteTime toDiscrete(Instant continuousTime);
+
+    /**
+     * This number's meaning depends on whether it's greater than 0:
+     *  * > 0: How many discrete steps you have to move forward to get to the next step that's included in this set
+     *  * <= 0: The inverse of how many discrete steps you have to move forward to get to the next step that isn't included in this set
+     *
+     * @param time The discrete time to check from
+     * @return The number described above
+     */
     protected abstract long stepsSince(DiscreteTime time);
     protected abstract long stepsUntil(DiscreteTime time);
 
@@ -83,7 +105,7 @@ public abstract class DiscretePeriodicTimeSet<DiscreteTime extends DiscretePerio
 
         @Override
         public Instant getEnd() {
-            return localDate.plusDays(1).atStartOfDay().atZone(timeZone.toZoneId()).toInstant().minusNanos(1);
+            return localDate.plusDays(1).atStartOfDay().atZone(timeZone.toZoneId()).toInstant();
         }
 
         @Override
