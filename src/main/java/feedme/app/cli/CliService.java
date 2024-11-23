@@ -7,6 +7,7 @@ import feedme.domain.tidbit.seed.Seed;
 import feedme.domain.tidbit.seed.SeedRepository;
 import feedme.domain.tidbit.seed.SeedService;
 import feedme.domain.tidbit.task.SimpleStatefulTaskSeed;
+import feedme.sample.task.ScheduledTaskSeedSample;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -93,6 +94,7 @@ public class CliService {
                 case "actions" -> printActions();
                 case "action" -> doAction(remaining);
                 case "print" -> {return new CliStatus(true, true);}
+                case "sample" -> addSample(remaining);
                 case "exit" -> {
                     out("bye");
                     return new CliStatus(false, false);
@@ -177,6 +179,11 @@ public class CliService {
             Duration.parse(onItTimeInput.toUpperCase())
         );
         seeds.addSeed(newSeed);
+    }
+
+    private void addSample(String remaining) {
+        int sampleNum = Integer.parseInt(remaining);
+        ScheduledTaskSeedSample.getSample(sampleNum, tidbits).populate(seeds);
     }
 
     private void out(String format, Object... objects) {

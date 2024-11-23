@@ -42,15 +42,15 @@ public class ScheduledTaskSeed extends TaskSeed {
         Duration offset = Duration.ofMinutes(1);
         Duration minPeriod = Duration.ofMinutes(5);
         SortedSet<Instant> scheduledTimes = new TreeSet<>();
-        TimeSet availableTime = schedule.getTimeSetFor(TaskScheduleState.Available).unionWith(TimeSpan.ofInstants(Instant.MIN, expiresAt));
+        TimeSet availableTimes = schedule.getTimeSetFor(TaskScheduleState.Available).unionWith(TimeSpan.ofInstants(Instant.MIN, expiresAt));
         Instant currentTime = expiresAt.minus(offset);
         while (scheduledTimes.size() < tidbitCount) {
-            if (availableTime.contains(currentTime)) {
+            if (availableTimes.contains(currentTime)) {
                 scheduledTimes.add(currentTime);
                 currentTime = currentTime.minus(minPeriod);
             } else {
                 Instant checkTime = currentTime.minus(minPeriod);
-                currentTime = TimeUtils.earliest(availableTime.getPreviousInclusive(checkTime).map(TimeSpan::lastTime).orElseThrow(), checkTime);
+                currentTime = TimeUtils.earliest(availableTimes.getPreviousInclusive(checkTime).map(TimeSpan::lastTime).orElseThrow(), checkTime);
             }
         }
         return new ScheduledTidbitPlan(scheduledTimes);
