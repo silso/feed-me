@@ -7,13 +7,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * The fundamental {@link TimeSet}, defined as the set of all time from (inclusively) the {@link #startTime()} to
@@ -92,6 +88,16 @@ public class TimeSpan implements MeasurableTimeSet {
             throw new IllegalArgumentException("Start time and end time cannot be the same");
         }
         return new TimeSpan(startTime, endTime);
+    }
+
+    @Override
+    public Optional<TimeSpan> getFirst() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<TimeSpan> getLast() {
+        return Optional.empty();
     }
 
     @Override
