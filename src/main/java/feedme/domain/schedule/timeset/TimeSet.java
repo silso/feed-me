@@ -157,17 +157,17 @@ public interface TimeSet {
         return new MeasurableTimeSet() {
             @Override
             public Optional<TimeSpan> getFirst() {
-                return Optional.empty();
+                return getNextInclusive(other.startTime());
             }
 
             @Override
             public Optional<TimeSpan> getLast() {
-                return Optional.empty();
+                return getPreviousInclusive(other.endTime());
             }
 
             @Override
             public Optional<TimeSpan> getPrevious(Instant time) {
-                if (other.getAt(time).isPresent()) {
+                if (other.contains(time)) {
                     return thisSet.getPrevious(time).map(other::intersectWithTimeSpan).flatMap(set -> set.getPrevious(time));
                 } else if (other.getPrevious(time).isPresent()) {
                     return thisSet.getPreviousInclusive(other.lastTime()).map(other::intersectWithTimeSpan).flatMap(set -> set.getPrevious(time));

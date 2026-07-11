@@ -16,71 +16,12 @@ import java.util.TimeZone;
  * (exclusively) the {@link #endTime()}. This also has fundamental method implementations for {@link #unionWithTimeSpan(TimeSpan)} and {@link #intersectWithTimeSpan(TimeSpan)}.
  */
 public class TimeSpan implements MeasurableTimeSet {
-    // TODO: these feel weird
-    public static TimeSpan MIN = new TimeSpan(Instant.MIN, Instant.MIN) {
-        @Override
-        public Instant lastTime() {
-            return super.endTime();
-        }
-
-        @Override
-        public Optional<TimeSpan> getPrevious(Instant time) {
-            return Optional.of(this);
-        }
-
-        @Override
-        public Optional<TimeSpan> getAt(Instant time) {
-            return OptionalUtils.fromCondition(
-                () -> Instant.MIN.equals(time),
-                this
-            );
-        }
-
-        @Override
-        public Optional<TimeSpan> getNext(Instant time) {
-            return Optional.empty();
-        }
-    };
-    public static TimeSpan MAX = new TimeSpan(Instant.MAX, Instant.MAX) {
-        @Override
-        public Instant lastTime() {
-            return super.endTime();
-        }
-
-        @Override
-        public Optional<TimeSpan> getPrevious(Instant time) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<TimeSpan> getAt(Instant time) {
-            return OptionalUtils.fromCondition(
-                () -> Instant.MAX.equals(time),
-                this
-            );
-        }
-
-        @Override
-        public Optional<TimeSpan> getNext(Instant time) {
-            return Optional.of(this);
-        }
-    };
     private final Instant startTime;
     private final Instant endTime;
 
     protected TimeSpan(@NotNull Instant startTime, @NotNull Instant endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
-    }
-
-    public static TimeSpan ofInstant(@NotNull Instant time) {
-        if (Instant.MIN.equals(time)) {
-            return MIN;
-        } else if (Instant.MAX.equals(time)) {
-            return MAX;
-        } else {
-            return new TimeSpan(time, time.plusNanos(1));
-        }
     }
 
     public static TimeSpan ofInstants(@NotNull Instant startTime, @NotNull Instant endTime) {
@@ -92,12 +33,12 @@ public class TimeSpan implements MeasurableTimeSet {
 
     @Override
     public Optional<TimeSpan> getFirst() {
-        return Optional.empty();
+        return Optional.of(this);
     }
 
     @Override
     public Optional<TimeSpan> getLast() {
-        return Optional.empty();
+        return Optional.of(this);
     }
 
     @Override
@@ -162,9 +103,7 @@ public class TimeSpan implements MeasurableTimeSet {
             );
         } else {
             MutableTimeSet set = MutableTimeSet.create();
-            if (!set.addAll(List.of(this, other))) {
-                throw new RuntimeException("Failed to add to set");
-            }
+            set.addAll(List.of(this, other));
             return set;
         }
     }

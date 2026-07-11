@@ -15,13 +15,13 @@ class TimeSetTest {
         Instant time1 = Instant.ofEpochMilli(1700471244096L);
         Instant time2 = Instant.ofEpochMilli(1701471266063L);
         for (Instant time : List.of(Instant.MIN, time1, Instant.now(), Instant.MAX.minusNanos(1))) {
-            TimeSpan timeSpan = TimeSpan.ofInstant(time);
+            TimeSpan timeSpan = instantTimeSpan(time);
             assertTrue(timeSpan.getAt(time).isPresent());
             assertTrue(timeSpan.contains(time));
             assertFalse(timeSpan.contains(time2));
         }
-        TimeSpan timeSpan = TimeSpan.ofInstant(time2);
-        assertEquals(TimeSpan.ofInstant(time2), timeSpan.getNext(time1).orElseThrow());
+        TimeSpan timeSpan = instantTimeSpan(time2);
+        assertEquals(instantTimeSpan(time2), timeSpan.getNext(time1).orElseThrow());
         assertEquals(time2, timeSpan.getNext(time1).orElseThrow().startTime());
         assertEquals(time2.plusNanos(1), timeSpan.getNext(time1).orElseThrow().endTime());
         assertFalse(timeSpan.getPrevious(time1).isPresent());
@@ -37,15 +37,15 @@ class TimeSetTest {
         assertTrue(timeSpan.contains(time1));
         assertTrue(timeSpan.contains(time1.plusMillis(1)));
         assertTrue(timeSpan.contains(time2.minusMillis(1)));
-        assertFalse(timeSpan.isContiguousWith(TimeSpan.ofInstant(time1.minusMillis(1))));
-        assertTrue(timeSpan.isContiguousWith(TimeSpan.ofInstant(time1)));
-        assertTrue(timeSpan.isContiguousWith(TimeSpan.ofInstant(time1.plusMillis(1))));
-        assertTrue(timeSpan.isContiguousWith(TimeSpan.ofInstant(time2.minusMillis(1))));
+        assertFalse(timeSpan.isContiguousWith(instantTimeSpan(time1.minusMillis(1))));
+        assertTrue(timeSpan.isContiguousWith(instantTimeSpan(time1)));
+        assertTrue(timeSpan.isContiguousWith(instantTimeSpan(time1.plusMillis(1))));
+        assertTrue(timeSpan.isContiguousWith(instantTimeSpan(time2.minusMillis(1))));
         assertFalse(timeSpan.contains(time2));
         assertFalse(timeSpan.contains(time2.plusMillis(1)));
         // notice touching time spans are contiguous
-        assertTrue(timeSpan.isContiguousWith(TimeSpan.ofInstant(time2)));
-        assertFalse(timeSpan.isContiguousWith(TimeSpan.ofInstant(time2.plusMillis(1))));
+        assertTrue(timeSpan.isContiguousWith(instantTimeSpan(time2)));
+        assertFalse(timeSpan.isContiguousWith(instantTimeSpan(time2.plusMillis(1))));
 
         Instant justBeforeTime1 = time1.minusNanos(1);
         Instant justAfterTime1 = time1.plusNanos(1);
@@ -86,7 +86,7 @@ class TimeSetTest {
 
         assertEquals(tsA, tsA.unionWith(tsA));
         for (TimeSpan ts : List.of(tsB, tsC, tsD, tsE, tsF)) {
-            assertNotEquals(TimeSpan.ofInstant(time2), ts);
+            assertNotEquals(instantTimeSpan(time2), ts);
             assertNotEquals(TimeSpan.EMPTY, ts);
             assertNotEquals(ts, tsA);
             assertNotEquals(ts, tsA.unionWith(tsA));
@@ -171,11 +171,11 @@ class TimeSetTest {
         assertEquals(setA, setA.unionWith(setA));
         assertEquals(setA, spanA.unionWith(setA));
         assertEquals(setA, setA.unionWith(spanA.unionWithTimeSpan(spanC)).unionWith(spanC));
-        assertNotEquals(setA, setA.unionWith(TimeSpan.ofInstant(t[1].minusNanos(1))));
-        assertEquals(setA, setA.unionWith(TimeSpan.ofInstant(t[1])));
-        assertEquals(setA, setA.unionWith(TimeSpan.ofInstant(t[3].minusNanos(1))));
-        assertNotEquals(setA, setA.unionWith(TimeSpan.ofInstant(t[3])));
-        assertNotEquals(setA, setA.unionWith(TimeSpan.ofInstant(t[4])));
+        assertNotEquals(setA, setA.unionWith(instantTimeSpan(t[1].minusNanos(1))));
+        assertEquals(setA, setA.unionWith(instantTimeSpan(t[1])));
+        assertEquals(setA, setA.unionWith(instantTimeSpan(t[3].minusNanos(1))));
+        assertNotEquals(setA, setA.unionWith(instantTimeSpan(t[3])));
+        assertNotEquals(setA, setA.unionWith(instantTimeSpan(t[4])));
         assertEquals(TimeSpan.ofInstants(t[1], t[7]), setA.unionWith(spanB));
 
         // set A intersections
@@ -223,5 +223,9 @@ class TimeSetTest {
             assertEquals(set, timeSet.getNext(time).orElseThrow());
             return this;
         }
+    }
+
+    private static TimeSpan instantTimeSpan(Instant time) {
+        return TimeSpan.ofInstants(time, time.plusNanos(1));
     }
 }
