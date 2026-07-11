@@ -1,21 +1,24 @@
 package feedme.domain.schedule.timeset;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface MeasurableTimeSet extends TimeSet {
     Optional<TimeSpan> getFirst();
     Optional<TimeSpan> getLast();
 
     default Duration getDuration() {
-//        return Stream.<Optional<TimeSpan>>iterate(
-//                getFirst(),
-//                (Optional<TimeSpan> currentSpan) -> currentSpan.map(span -> getNext(span.startTime()).isPresent()).orElse(false),
-//                (Optional<TimeSpan> currentSpan) -> currentSpan.map(span -> getNext(span.startTime()).orElseThrow().startTime())
-//            ).map(this::getAt)
-//            .map(Optional::orElseThrow);
-        return streamForwardFrom(Instant.MIN).map(TimeSpan::getDuration).reduce(Duration.ZERO, Duration::plus);
+        return getFirst()
+            .map(_span -> Stream.iterate(
+                    getFirst().get(),
+                    (TimeSpan span) -> getNext(span.startTime()).isPresent(),
+                    (TimeSpan span) -> getNext(span.startTime()).orElseThrow()
+                )
+                .map(TimeSpan::getDuration)
+                .reduce(Duration.ZERO, Duration::plus)
+            )
+            .orElse(Duration.ZERO);
     }
 
     default MeasurableTimeSet unionWith(MeasurableTimeSet other) {

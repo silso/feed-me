@@ -1,7 +1,6 @@
 package feedme.domain.schedule.timeset;
 
 import feedme.util.TimeUtils;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -11,24 +10,24 @@ import java.util.*;
  * A simple way to compose multiple {@link TimeSpan}s using sets.
  */
 public class FiniteTimeSet implements MutableTimeSet, MeasurableTimeSet {
-    private final NavigableSet<TimeSpan> spansByStartTime = new TreeSet<>(Comparator.comparing(TimeSpan::startTime));
-    private final NavigableSet<TimeSpan> spansByEndTime = new TreeSet<>(Comparator.comparing(TimeSpan::endTime));
+    private final NavigableMap<Instant, TimeSpan> spansByStartTime = new TreeMap<>();
+    private final NavigableMap<Instant, TimeSpan> spansByEndTime = new TreeMap<>();
 
     public FiniteTimeSet() {}
 
     @Override
     public Optional<TimeSpan> getPrevious(Instant time) {
-        return Optional.ofNullable(spansByEndTime.floor(TimeSpan.ofInstant(time)));
+        return Optional.ofNullable(spansByEndTime.floorEntry(time)).map(Map.Entry::getValue);
     }
 
     @Override
     public Optional<TimeSpan> getAt(Instant time) {
         // inclusive
-        @Nullable TimeSpan latestPreviousStart = spansByStartTime.floor(TimeSpan.ofInstant(time));
+        Optional<TimeSpan> latestPreviousStart = Optional.ofNullable(spansByStartTime.floorEntry(time)).map(Map.Entry::getValue);
         // exclusive
-        @Nullable TimeSpan earliestNextEnd = spansByEndTime.higher(TimeSpan.ofInstant(time));
-        if (latestPreviousStart != null && latestPreviousStart.equals(earliestNextEnd)) {
-            return Optional.of(latestPreviousStart);
+        Optional<TimeSpan> earliestNextEnd = Optional.ofNullable(spansByEndTime.higherEntry(time)).map(Map.Entry::getValue);
+        if (latestPreviousStart.isPresent() && latestPreviousStart.equals(earliestNextEnd)) {
+            return latestPreviousStart;
         } else {
             return Optional.empty();
         }
@@ -36,13 +35,13 @@ public class FiniteTimeSet implements MutableTimeSet, MeasurableTimeSet {
 
     @Override
     public Optional<TimeSpan> getNext(Instant time) {
-        return Optional.ofNullable(spansByStartTime.higher(TimeSpan.ofInstant(time)));
+        return Optional.ofNullable(spansByStartTime.higherEntry(time)).map(Map.Entry::getValue);
     }
 
     @Override
     public TimeSet unionWith(TimeSet other) {
         TimeSet set = other;
-        for (TimeSpan span : spansByStartTime) {
+        for (TimeSpan span : spansByStartTime.values()) {
             set = set.unionWithTimeSpan(span);
         }
         return set;
@@ -51,7 +50,7 @@ public class FiniteTimeSet implements MutableTimeSet, MeasurableTimeSet {
     @Override
     public MeasurableTimeSet unionWith(MeasurableTimeSet other) {
         MeasurableTimeSet set = other;
-        for (TimeSpan span : spansByStartTime) {
+        for (TimeSpan span : spansByStartTime.values()) {
             set = set.unionWithTimeSpan(span);
         }
         return set;
@@ -61,7 +60,7 @@ public class FiniteTimeSet implements MutableTimeSet, MeasurableTimeSet {
     public MeasurableTimeSet unionWithTimeSpan(TimeSpan other) {
         MutableTimeSet set = MutableTimeSet.create();
         Set<TimeSpan> contiguousTimeSpans = new HashSet<>();
-        for (TimeSpan span : spansByStartTime) {
+        for (TimeSpan span : spansByStartTime.values()) {
             if (span.isContiguousWith(other)) {
                 contiguousTimeSpans.add(span);
             } else {
@@ -78,7 +77,7 @@ public class FiniteTimeSet implements MutableTimeSet, MeasurableTimeSet {
     @Override
     public MeasurableTimeSet intersectWith(TimeSet other) {
         MeasurableTimeSet set = TimeSet.EMPTY;
-        for (TimeSpan span : spansByStartTime) {
+        for (TimeSpan span : spansByStartTime.values()) {
             set = set.unionWith(other.intersectWithTimeSpan(span));
         }
         return set;
@@ -88,7 +87,7 @@ public class FiniteTimeSet implements MutableTimeSet, MeasurableTimeSet {
     public MeasurableTimeSet intersectWithTimeSpan(TimeSpan other) {
         MeasurableTimeSet set = TimeSet.EMPTY;
         Set<TimeSpan> contiguousTimeSpans = new HashSet<>();
-        for (TimeSpan span : spansByStartTime) {
+        for (TimeSpan span : spansByStartTime.values()) {
             if (span.hasOverlapWith(other)) {
                 contiguousTimeSpans.add(span);
             }
@@ -100,37 +99,39 @@ public class FiniteTimeSet implements MutableTimeSet, MeasurableTimeSet {
     }
 
     @Override
-    public synchronized boolean add(TimeSpan span) {
+    public synchronized void add(TimeSpan span) {
         // this is slow, should find a better way to do this
-        if (spansByStartTime.stream().anyMatch(s -> s.isContiguousWith(span))) {
+        if (spansByStartTime.values().stream().anyMatch(s -> s.isContiguousWith(span))) {
             throw new IllegalArgumentException("Can't add contiguous span to set");
         }
-        return spansByStartTime.add(span) & spansByEndTime.add(span);
+        spansByStartTime.put(span.startTime(), span);
+        spansByEndTime.put(span.endTime(), span);
     }
 
     @Override
-    public boolean addAll(Collection<TimeSpan> spans) {
-        return spans.stream().allMatch(this::add);
+    public void addAll(Collection<TimeSpan> spans) {
+        spans.forEach(this::add);
     }
 
     @Override
-    public synchronized boolean remove(TimeSpan span) {
-        return spansByStartTime.remove(span) & spansByEndTime.remove(span);
+    public synchronized void remove(TimeSpan span) {
+        spansByStartTime.remove(span.startTime());
+        spansByEndTime.remove(span.endTime());
     }
 
     @Override
     public Optional<TimeSpan> getFirst() {
-        return Optional.empty();
+        return Optional.ofNullable(spansByStartTime.firstEntry()).map(Map.Entry::getValue);
     }
 
     @Override
     public Optional<TimeSpan> getLast() {
-        return Optional.empty();
+        return Optional.ofNullable(spansByEndTime.lastEntry()).map(Map.Entry::getValue);
     }
 
     @Override
     public Duration getDuration() {
-        return spansByStartTime.stream().map(TimeSpan::getDuration).reduce(Duration.ZERO, Duration::plus);
+        return spansByStartTime.values().stream().map(TimeSpan::getDuration).reduce(Duration.ZERO, Duration::plus);
     }
 
     @Override
@@ -140,7 +141,7 @@ public class FiniteTimeSet implements MutableTimeSet, MeasurableTimeSet {
             return com.google.common.base.Objects.equal(spansByStartTime, that.spansByStartTime) && com.google.common.base.Objects.equal(spansByEndTime, that.spansByEndTime);
         } else {
             if (o instanceof TimeSpan that && spansByStartTime.size() == 1) {
-                return spansByStartTime.contains(that);
+                return spansByStartTime.containsValue(that);
             } else {
                 return false;
             }
