@@ -1,6 +1,8 @@
 package feedme.domain.schedule.timeset
 
-
+import feedme.domain.schedule.timeset.operation.TimeSetBinaryOperationVisitor
+import feedme.domain.schedule.timeset.operation.TimeSetUnaryOperationVisitor
+import org.jetbrains.annotations.NotNull
 import spock.lang.Specification
 
 import java.time.Duration
@@ -26,12 +28,12 @@ class TimeSetDefaultsTest extends Specification {
     def "IntersectWithTimeSpan"() {
         when:
         def resultSet = new DurationTimeSet(nanosAfterEpoch(aAnchor), Duration.ofNanos(aBetween), Duration.ofNanos(aOn))
-                .intersectWithTimeSpan(TimeSpan.ofInstants(nanosAfterEpoch(bStart), nanosAfterEpoch(bEnd)))
+                .intersectWithTimeSpan(TimeSpan.withBounds(nanosAfterEpoch(bStart), nanosAfterEpoch(bEnd)))
 
         then:
-        resultSet.getPrevious(nanosAfterEpoch(time)).map(res -> previousPresent && res == TimeSpan.ofInstants(nanosAfterEpoch(previousStart), nanosAfterEpoch(previousEnd))).orElse(!previousPresent)
-        resultSet.getAt(nanosAfterEpoch(time)).map(res -> atPresent && res == TimeSpan.ofInstants(nanosAfterEpoch(atStart), nanosAfterEpoch(atEnd))).orElse(!atPresent)
-        resultSet.getNext(nanosAfterEpoch(time)).map(res -> nextPresent && res == TimeSpan.ofInstants(nanosAfterEpoch(nextStart), nanosAfterEpoch(nextEnd))).orElse(!nextPresent)
+        resultSet.getPrevious(nanosAfterEpoch(time)).map(res -> previousPresent && res == TimeSpan.withBounds(nanosAfterEpoch(previousStart), nanosAfterEpoch(previousEnd))).orElse(!previousPresent)
+        resultSet.getAt(nanosAfterEpoch(time)).map(res -> atPresent && res == TimeSpan.withBounds(nanosAfterEpoch(atStart), nanosAfterEpoch(atEnd))).orElse(!atPresent)
+        resultSet.getNext(nanosAfterEpoch(time)).map(res -> nextPresent && res == TimeSpan.withBounds(nanosAfterEpoch(nextStart), nanosAfterEpoch(nextEnd))).orElse(!nextPresent)
 
         where:
         aAnchor | aBetween | aOn | bStart | bEnd | time || previousPresent | previousStart | previousEnd | atPresent | atStart | atEnd | nextPresent | nextStart | nextEnd
@@ -101,16 +103,16 @@ class TimeSetDefaultsTest extends Specification {
 
     def "invert TimeSpan with default method"(){
         when:
-        def inputSet = new DefaultsTimeSpan(TimeSpan.ofInstants(nanosAfterEpoch(startTime), nanosAfterEpoch(endTime)))
+        def inputSet = new DefaultsTimeSpan(TimeSpan.withBounds(nanosAfterEpoch(startTime), nanosAfterEpoch(endTime)))
         def resultSet = inputSet.invert()
 
         then:
         resultSet.invert().getPrevious(nanosAfterEpoch(time)) == inputSet.getPrevious(nanosAfterEpoch(time))
         resultSet.invert().getAt(nanosAfterEpoch(time)) == inputSet.getAt(nanosAfterEpoch(time))
         resultSet.invert().getNext(nanosAfterEpoch(time)) == inputSet.getNext(nanosAfterEpoch(time))
-        resultSet.getPrevious(nanosAfterEpoch(time)).map(res -> previousPresent && res == TimeSpan.ofInstants(nanosAfterEpoch(previousStart), nanosAfterEpoch(previousEnd))).orElse(!previousPresent)
-        resultSet.getAt(nanosAfterEpoch(time)).map(res -> atPresent && res == TimeSpan.ofInstants(nanosAfterEpoch(atStart), nanosAfterEpoch(atEnd))).orElse(!atPresent)
-        resultSet.getNext(nanosAfterEpoch(time)).map(res -> nextPresent && res == TimeSpan.ofInstants(nanosAfterEpoch(nextStart), nanosAfterEpoch(nextEnd))).orElse(!nextPresent)
+        resultSet.getPrevious(nanosAfterEpoch(time)).map(res -> previousPresent && res == TimeSpan.withBounds(nanosAfterEpoch(previousStart), nanosAfterEpoch(previousEnd))).orElse(!previousPresent)
+        resultSet.getAt(nanosAfterEpoch(time)).map(res -> atPresent && res == TimeSpan.withBounds(nanosAfterEpoch(atStart), nanosAfterEpoch(atEnd))).orElse(!atPresent)
+        resultSet.getNext(nanosAfterEpoch(time)).map(res -> nextPresent && res == TimeSpan.withBounds(nanosAfterEpoch(nextStart), nanosAfterEpoch(nextEnd))).orElse(!nextPresent)
 
         where:
         startTime | endTime | time || previousPresent | previousStart | previousEnd | atPresent | atStart | atEnd | nextPresent | nextStart | nextEnd
@@ -142,18 +144,33 @@ class TimeSetDefaultsTest extends Specification {
         }
 
         @Override
-        Optional<TimeSpan> getPrevious(Instant time) throws TimeSetException.Unchecked {
+        Optional<TimeSpan> getPrevious(@NotNull Instant time) throws TimeSetException.Unchecked {
             return this.delegate.getPrevious(time)
         }
 
         @Override
-        Optional<TimeSpan> getAt(Instant time) throws TimeSetException.Unchecked {
+        Optional<TimeSpan> getAt(@NotNull Instant time) throws TimeSetException.Unchecked {
             return this.delegate.getAt(time)
         }
 
         @Override
-        Optional<TimeSpan> getNext(Instant time) throws TimeSetException.Unchecked {
+        Optional<TimeSpan> getNext(@NotNull Instant time) throws TimeSetException.Unchecked {
             return this.delegate.getNext(time)
+        }
+
+        @Override
+        TimeSet accept(TimeSetBinaryOperationVisitor visitor, TimeSet other) {
+            throw new UnsupportedOperationException("We don't accept visitors, no thank you")
+        }
+
+        @Override
+        TimeSet accept(TimeSetUnaryOperationVisitor visitor) {
+            throw new UnsupportedOperationException("We don't accept visitors, no thank you")
+        }
+
+        @Override
+        boolean isEmpty() {
+            return false
         }
 
         @Override
@@ -164,20 +181,20 @@ class TimeSetDefaultsTest extends Specification {
 
     def "invert FiniteTimeSet"() {
         given:
-        def inputSet = new FiniteTimeSet();
+        def inputSet = new TimeSpanSet();
 
         when:
-        inputSet.add(TimeSpan.ofInstants(nanosAfterEpoch(aStart), nanosAfterEpoch(aEnd)))
-        inputSet.add(TimeSpan.ofInstants(nanosAfterEpoch(bStart), nanosAfterEpoch(bEnd)))
+        inputSet.add(TimeSpan.withBounds(nanosAfterEpoch(aStart), nanosAfterEpoch(aEnd)))
+        inputSet.add(TimeSpan.withBounds(nanosAfterEpoch(bStart), nanosAfterEpoch(bEnd)))
         def resultSet = inputSet.invert()
 
         then:
         resultSet.invert().getPrevious(nanosAfterEpoch(time)) == inputSet.getPrevious(nanosAfterEpoch(time))
         resultSet.invert().getAt(nanosAfterEpoch(time)) == inputSet.getAt(nanosAfterEpoch(time))
         resultSet.invert().getNext(nanosAfterEpoch(time)) == inputSet.getNext(nanosAfterEpoch(time))
-        resultSet.getPrevious(nanosAfterEpoch(time)).map(res -> previousPresent && res == TimeSpan.ofInstants(nanosAfterEpoch(previousStart), nanosAfterEpoch(previousEnd))).orElse(!previousPresent)
-        resultSet.getAt(nanosAfterEpoch(time)).map(res -> atPresent && res == TimeSpan.ofInstants(nanosAfterEpoch(atStart), nanosAfterEpoch(atEnd))).orElse(!atPresent)
-        resultSet.getNext(nanosAfterEpoch(time)).map(res -> nextPresent && res == TimeSpan.ofInstants(nanosAfterEpoch(nextStart), nanosAfterEpoch(nextEnd))).orElse(!nextPresent)
+        resultSet.getPrevious(nanosAfterEpoch(time)).map(res -> previousPresent && res == TimeSpan.withBounds(nanosAfterEpoch(previousStart), nanosAfterEpoch(previousEnd))).orElse(!previousPresent)
+        resultSet.getAt(nanosAfterEpoch(time)).map(res -> atPresent && res == TimeSpan.withBounds(nanosAfterEpoch(atStart), nanosAfterEpoch(atEnd))).orElse(!atPresent)
+        resultSet.getNext(nanosAfterEpoch(time)).map(res -> nextPresent && res == TimeSpan.withBounds(nanosAfterEpoch(nextStart), nanosAfterEpoch(nextEnd))).orElse(!nextPresent)
 
         where:
         aStart | aEnd | bStart | bEnd | time || previousPresent | previousStart | previousEnd | atPresent | atStart | atEnd | nextPresent | nextStart | nextEnd

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import org.jetbrains.annotations.NotNull;
 
 public class DayOfWeekTimeSet extends DiscretePeriodicTimeSet<DiscretePeriodicTimeSet.DayInstant> {
 
@@ -13,7 +14,7 @@ public class DayOfWeekTimeSet extends DiscretePeriodicTimeSet<DiscretePeriodicTi
     private final Map<DayOfWeek, Long> countdownSinceMap = new HashMap<>();
     private final Map<DayOfWeek, Long> countdownUntilMap = new HashMap<>();
 
-    public DayOfWeekTimeSet(TimeZone timeZone, Set<DayOfWeek> days) {
+    public DayOfWeekTimeSet(@NotNull TimeZone timeZone, @NotNull Set<DayOfWeek> days) {
         this.timeZone = timeZone;
         createCountdownFunction(days);
     }
@@ -88,5 +89,10 @@ public class DayOfWeekTimeSet extends DiscretePeriodicTimeSet<DiscretePeriodicTi
     @Override
     protected DayInstant toDiscrete(Instant continuousTime) {
         return new DayInstant(timeZone, continuousTime);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return false;
     }
 }

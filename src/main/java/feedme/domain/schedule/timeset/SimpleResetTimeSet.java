@@ -4,8 +4,10 @@ import feedme.util.OptionalUtils;
 
 import java.time.Instant;
 import java.util.Optional;
+import org.jetbrains.annotations.NotNull;
 
-public class SimpleResetTimeSet implements PeriodicTimeSet {
+// TODO: remove?
+public class SimpleResetTimeSet {
     private final Periodic startPeriodic;
     private final Periodic endPeriodic;
 
@@ -14,32 +16,29 @@ public class SimpleResetTimeSet implements PeriodicTimeSet {
         this.endPeriodic = endPeriodic;
     }
 
-    @Override
-    public Optional<TimeSpan> getPrevious(Instant time) {
+    public Optional<TimeSpan> getPrevious(@NotNull Instant time) {
         Instant latestPreviousEnd = endPeriodic.getPrevious(time);
         Instant previousStart = startPeriodic.getPrevious(latestPreviousEnd);
-        return Optional.of(TimeSpan.ofInstants(
+        return Optional.of(TimeSpan.withBounds(
             previousStart,
             endPeriodic.getNext(previousStart)
         ));
     }
 
-    @Override
-    public Optional<TimeSpan> getAt(Instant time) {
+    public Optional<TimeSpan> getAt(@NotNull Instant time) {
         Instant latestPreviousStart = startPeriodic.getAt(time).orElse(startPeriodic.getPrevious(time));
         Instant nextEnd = endPeriodic.getNext(latestPreviousStart);
-        TimeSpan timeSpan = TimeSpan.ofInstants(latestPreviousStart, nextEnd);
+        TimeSpan timeSpan = TimeSpan.withBounds(latestPreviousStart, nextEnd);
         return OptionalUtils.fromCondition(
             () -> timeSpan.contains(time),
             timeSpan
         );
     }
 
-    @Override
-    public Optional<TimeSpan> getNext(Instant time) {
+    public Optional<TimeSpan> getNext(@NotNull Instant time) {
         Instant earliestNextStart = startPeriodic.getNext(time);
         Instant nextEnd = endPeriodic.getNext(earliestNextStart);
-        return Optional.of(TimeSpan.ofInstants(
+        return Optional.of(TimeSpan.withBounds(
             earliestNextStart,
             nextEnd
         ));

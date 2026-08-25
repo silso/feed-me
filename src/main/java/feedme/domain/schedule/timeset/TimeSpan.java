@@ -1,34 +1,71 @@
 package feedme.domain.schedule.timeset;
 
 import com.google.common.base.Objects;
+import feedme.domain.schedule.timeset.operation.TimeSetBinaryOperationVisitor;
+import feedme.domain.schedule.timeset.operation.TimeSetUnaryOperationVisitor;
+import feedme.util.InfInstant;
 import feedme.util.OptionalUtils;
-import feedme.util.TimeUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
 
 /**
- * The fundamental {@link TimeSet}, defined as the set of all time from (inclusively) the {@link #startTime()} to
- * (exclusively) the {@link #endTime()}. This also has fundamental method implementations for {@link #unionWithTimeSpan(TimeSpan)} and {@link #intersectWithTimeSpan(TimeSpan)}.
+ * The fundamental {@link TimeSet}, defined as the set of all time from (inclusively) the {@link #start()} to
+ * (exclusive, unless it's +inf) the {@link #end()}.
  */
-public class TimeSpan implements MeasurableTimeSet {
-    private final Instant startTime;
-    private final Instant endTime;
+public class TimeSpan implements CountableTimeSet {
+    private final InfInstant startTime;
+    private final InfInstant endTime;
 
     protected TimeSpan(@NotNull Instant startTime, @NotNull Instant endTime) {
+        this(InfInstant.of(startTime), InfInstant.of(endTime));
+    }
+
+    protected TimeSpan(@NotNull InfInstant startTime, @NotNull InfInstant endTime) {
+        if (startTime.equals(endTime)) {
+            throw new IllegalArgumentException("Start time and end time cannot be the same");
+        }
+        if (!endTime.isAfter(startTime)) {
+            throw new IllegalArgumentException(String.format("Start time must be before end time: '%s' - '%s'", startTime, endTime));
+        }
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
-    public static TimeSpan ofInstants(@NotNull Instant startTime, @NotNull Instant endTime) {
-        if (startTime == endTime) {
-            throw new IllegalArgumentException("Start time and end time cannot be the same");
+    @Override
+    public Optional<TimeSpan> getPrevious(InfInstant time) {
+        if (end().isInfiniteFuture()) {
+            return Optional.empty();
         }
-        return new TimeSpan(startTime, endTime);
+        return OptionalUtils.fromCondition(() -> end().isBefore(time) || end().equals(time), this);
+    }
+
+    @Override
+    public Optional<TimeSpan> getAt(InfInstant time) {
+        if (end().isInfiniteFuture() && time.isInfiniteFuture()) {
+            return Optional.of(this);
+        }
+        return OptionalUtils.fromCondition(
+            () -> start().equals(time) || (start().isBefore(time) && end().isAfter(time)),
+            this
+        );
+    }
+
+    @Override
+    public Optional<TimeSpan> getNext(InfInstant time) {
+        return OptionalUtils.fromCondition(() -> start().isAfter(time), this);
+    }
+
+    @Override
+    public @NotNull TimeSet accept(TimeSetBinaryOperationVisitor visitor, TimeSet other) {
+        return visitor.visit(other, this);
+    }
+
+    @Override
+    public @NotNull TimeSet accept(TimeSetUnaryOperationVisitor visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -41,106 +78,30 @@ public class TimeSpan implements MeasurableTimeSet {
         return Optional.of(this);
     }
 
-    @Override
-    public Duration getDuration() {
-        return Duration.between(startTime(), endTime());
-    }
-
-    public Instant startTime() {
+    public InfInstant start() {
         return startTime;
     }
 
-    public Instant endTime() {
+    public InfInstant end() {
         return endTime;
     }
 
-    public Instant lastTime() {
-        return endTime.minusNanos(1);
-    }
-
-    @Override
-    public Optional<TimeSpan> getPrevious(Instant time) {
-        return OptionalUtils.fromCondition(() -> endTime().isBefore(time) || endTime().equals(time), this);
-    }
-
-    @Override
-    public Optional<TimeSpan> getAt(Instant time) {
-        return OptionalUtils.fromCondition(
-            () -> startTime().equals(time) || (startTime().isBefore(time) && endTime().isAfter(time)),
-            this
-        );
-    }
-
-    @Override
-    public Optional<TimeSpan> getNext(Instant time) {
-        return OptionalUtils.fromCondition(() -> startTime().isAfter(time), this);
-    }
-
     public boolean isContiguousWith(TimeSpan other) {
-        return hasOverlapWith(other) || contains(other.endTime()) || other.contains(this.endTime());
+        return hasOverlapWith(other) || contains(other.end()) || other.contains(this.end());
     }
 
     public boolean hasOverlapWith(TimeSpan other) {
-        return contains(other.startTime()) || other.contains(this.startTime());
+        return contains(other.start()) || other.contains(this.start());
     }
 
-    @Override
-    public TimeSet unionWith(TimeSet other) {
-        return other.unionWithTimeSpan(this);
-    }
-
-    @Override
-    public MeasurableTimeSet unionWith(MeasurableTimeSet other) {
-        return other.unionWithTimeSpan(this);
-    }
-
-    @Override
-    public MeasurableTimeSet unionWithTimeSpan(TimeSpan other) {
-        if (isContiguousWith(other)) {
-            return new TimeSpan(
-                TimeUtils.earliest(this.startTime(), other.startTime()),
-                TimeUtils.latest(this.endTime(), other.endTime())
-            );
-        } else {
-            MutableTimeSet set = MutableTimeSet.create();
-            set.addAll(List.of(this, other));
-            return set;
-        }
-    }
-
-    @Override
-    public MeasurableTimeSet intersectWith(TimeSet other) {
-        return other.intersectWithTimeSpan(this);
-    }
-
-    @Override
-    public MeasurableTimeSet intersectWithTimeSpan(TimeSpan other) {
-        if (hasOverlapWith(other)) {
-            return new TimeSpan(
-                TimeUtils.latest(this.startTime(), other.startTime()),
-                TimeUtils.earliest(this.endTime(), other.endTime())
-            );
-        } else {
-            return TimeSet.EMPTY;
-        }
-    }
+    // TODO: more nuanced equality and hashcode
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o instanceof TimeSet timeSet) {
-            if (timeSet instanceof TimeSpan timeSpan) {
-                return Objects.equal(startTime, timeSpan.startTime) && Objects.equal(endTime, timeSpan.endTime);
-            } else {
-                return timeSet
-                    .getAt(startTime)
-                    .map(timeSpan -> Objects.equal(startTime, timeSpan.startTime) && Objects.equal(endTime, timeSpan.endTime))
-                    .orElse(false)
-                    && timeSet.getPrevious(startTime).isEmpty()
-                    && timeSet.getNext(lastTime()).isEmpty();
-            }
-        }
-        return false;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TimeSpan timeSpan = (TimeSpan) o;
+        return java.util.Objects.equals(startTime, timeSpan.startTime) && java.util.Objects.equals(endTime, timeSpan.endTime);
     }
 
     @Override
@@ -151,16 +112,54 @@ public class TimeSpan implements MeasurableTimeSet {
     @Override
     public String toString() {
         return "TimeSpan{" +
-            startTime() +
-            "-" + endTime() +
-            " (" +format(startTime()) +
-            "-" + format(endTime()) +
+            start() +
+            "-" + end() +
+            " (" + format(start()) +
+            "-" + format(end()) +
             ")}";
     }
 
     // TODO: fix with proper string conversion. This is a temporary fix since formatter injection
     // currently doesn't work with spock for some reason
-    private String format(Instant time) {
-        return time.atZone(TimeZone.getDefault().toZoneId()).getDayOfWeek().toString();
+    private String format(InfInstant time) {
+        if (time.getInstant().isEmpty()) {
+            if (time.isInfinitePast()) {
+                return "-Inf";
+            }
+            if (time.isInfiniteFuture()) {
+                return "+Inf";
+            }
+        }
+        return time.getInstant().get().atZone(TimeZone.getDefault().toZoneId()).getDayOfWeek().toString();
+    }
+
+    public static TimeSpan withBounds(@NotNull Instant startTime, @NotNull Instant endTime) {
+        return new TimeSegment(startTime, endTime);
+    }
+
+    public static TimeSpan withUpperBound(@NotNull Instant endTime) {
+        return new TimeSpan(InfInstant.infinitePast(), InfInstant.of(endTime));
+    }
+
+    public static TimeSpan withLowerBound(@NotNull Instant startTime) {
+        return new TimeSpan(InfInstant.of(startTime), InfInstant.infiniteFuture());
+    }
+
+    public static TimeSpan withBounds(@NotNull InfInstant startTime, @NotNull InfInstant endTime) {
+        if (startTime.isFinite() && endTime.isFinite()) {
+            return new TimeSegment(startTime.getInstant().get(), endTime.getInstant().get());
+        }
+        if (startTime.isInfinitePast() && endTime.isInfiniteFuture()) {
+            throw new IllegalArgumentException("Use EverythingTimeSet for a TimeSet with everything");
+        }
+        return new TimeSpan(startTime, endTime);
+    }
+
+    public static TimeSpan latestEndTime(@NotNull TimeSpan first, @NotNull TimeSpan second) {
+        if (second.end().isAfter(first.end())) {
+            return second;
+        } else {
+            return first;
+        }
     }
 }

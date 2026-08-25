@@ -17,7 +17,7 @@ class TimeSetUtilsTest extends Specification {
         }
 
         expect:
-        TimeSetUtils.findContiguousEndTime(TimeSpan.ofInstants(t[a1], t[a2]), TimeSpan.ofInstants(t[b1], t[b2]), t[from]).map(res -> res == t[c] && !empty).orElse(empty)
+        TimeSetUtils.findContiguousEndTime(TimeSpan.withBounds(t[a1], t[a2]), TimeSpan.withBounds(t[b1], t[b2]), t[from]).map(res -> res == t[c] && !empty).orElse(empty)
 
         where:
         a1 | a2 | b1 | b2 | from || c | empty
@@ -63,7 +63,7 @@ class TimeSetUtilsTest extends Specification {
         }
 
         expect:
-        TimeSetUtils.findContiguousEndTime(TimeSpan.ofInstants(t[a1], t[a2]), TimeSpan.ofInstants(t[b1], t[b2]), t[from]).map(res -> res == t[c] && !empty).orElse(empty)
+        TimeSetUtils.findContiguousEndTime(TimeSpan.withBounds(t[a1], t[a2]), TimeSpan.withBounds(t[b1], t[b2]), t[from]).map(res -> res == t[c] && !empty).orElse(empty)
 
         where:
         a1 | a2 | b1 | b2 | from || c | empty
