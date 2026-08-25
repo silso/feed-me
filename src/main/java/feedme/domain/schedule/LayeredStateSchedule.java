@@ -19,7 +19,7 @@ public class LayeredStateSchedule<StateType> implements Schedule<StateType> {
     }
 
     public static <StateType> LayeredStateScheduleBuilder<StateType> createWithBaseState(@NotNull StateType baseState) {
-        return new LayeredStateScheduleBuilder<StateType>().add(baseState, TimeSet.EVERYTHING);
+        return new LayeredStateScheduleBuilder<StateType>().add(baseState, TimeSet.everything());
     }
 
     @Override
@@ -36,7 +36,7 @@ public class LayeredStateSchedule<StateType> implements Schedule<StateType> {
 
     @Override
     public TimeSet getTimeSetFor(StateType state) {
-        TimeSet set = TimeSet.EMPTY;
+        TimeSet set = TimeSet.empty();
         for (SingleStateSchedule<StateType> rule : rules) {
             if (rule.state().equals(state)) {
                 set = set.unionWith(rule.timeSet());

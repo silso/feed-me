@@ -12,7 +12,7 @@ class DurationTimeSetTest extends Specification {
         TimeSet set = new DurationTimeSet(Instant.EPOCH, Duration.ofSeconds(20), Duration.ofSeconds(10))
 
         expect:
-        set.getPrevious(Instant.EPOCH.plusSeconds(a)).orElseThrow() == TimeSpan.ofInstants(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2))
+        set.getPrevious(Instant.EPOCH.plusSeconds(a)).orElseThrow() == TimeSpan.withBounds(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2))
 
         where:
           a ||  b1 |  b2
@@ -34,7 +34,7 @@ class DurationTimeSetTest extends Specification {
         TimeSet set = new DurationTimeSet(Instant.EPOCH, Duration.ofSeconds(20), Duration.ofSeconds(10))
 
         expect:
-        set.getAt(Instant.EPOCH.plusSeconds(a)).map(res -> res == TimeSpan.ofInstants(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2)) && !empty).orElse(empty)
+        set.getAt(Instant.EPOCH.plusSeconds(a)).map(res -> res == TimeSpan.withBounds(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2)) && !empty).orElse(empty)
 
         where:
           a ||  b1 |  b2 | empty
@@ -54,7 +54,7 @@ class DurationTimeSetTest extends Specification {
         TimeSet set = new DurationTimeSet(Instant.EPOCH, Duration.ofSeconds(20), Duration.ofSeconds(10))
 
         expect:
-        set.getNext(Instant.EPOCH.plusSeconds(a)).orElseThrow() == TimeSpan.ofInstants(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2))
+        set.getNext(Instant.EPOCH.plusSeconds(a)).orElseThrow() == TimeSpan.withBounds(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2))
 
         where:
           a ||  b1 |  b2
@@ -75,7 +75,7 @@ class DurationTimeSetTest extends Specification {
         TimeSet set = new DurationTimeSet(Instant.EPOCH.plusSeconds(5), Duration.ofSeconds(20), Duration.ofSeconds(15))
 
         expect:
-        set.getPrevious(Instant.EPOCH.plusSeconds(a)).orElseThrow() == TimeSpan.ofInstants(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2))
+        set.getPrevious(Instant.EPOCH.plusSeconds(a)).orElseThrow() == TimeSpan.withBounds(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2))
 
         where:
           a ||  b1 |  b2
@@ -97,7 +97,7 @@ class DurationTimeSetTest extends Specification {
         TimeSet set = new DurationTimeSet(Instant.EPOCH.plusSeconds(5), Duration.ofSeconds(20), Duration.ofSeconds(15))
 
         expect:
-        set.getAt(Instant.EPOCH.plusSeconds(a)).map(res -> res == TimeSpan.ofInstants(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2)) && !empty).orElse(empty)
+        set.getAt(Instant.EPOCH.plusSeconds(a)).map(res -> res == TimeSpan.withBounds(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2)) && !empty).orElse(empty)
 
         where:
           a ||  b1 |  b2 | empty
@@ -119,7 +119,7 @@ class DurationTimeSetTest extends Specification {
         TimeSet set = new DurationTimeSet(Instant.EPOCH.plusSeconds(5), Duration.ofSeconds(20), Duration.ofSeconds(15))
 
         expect:
-        set.getNext(Instant.EPOCH.plusSeconds(a)).orElseThrow() == TimeSpan.ofInstants(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2))
+        set.getNext(Instant.EPOCH.plusSeconds(a)).orElseThrow() == TimeSpan.withBounds(Instant.EPOCH.plusSeconds(b1), Instant.EPOCH.plusSeconds(b2))
 
         where:
           a ||  b1 |  b2

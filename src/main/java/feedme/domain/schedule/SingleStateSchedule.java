@@ -26,7 +26,7 @@ public record SingleStateSchedule<StateType>(@NotNull StateType state, @NotNull 
         if (this.state.equals(state)) {
             return timeSet;
         } else {
-            return TimeSet.EMPTY;
+            return TimeSet.empty();
         }
     }
 }

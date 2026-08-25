@@ -1,9 +1,12 @@
 package feedme.domain.schedule.timeset;
 
+import feedme.domain.schedule.timeset.operation.TimeSetBinaryOperationVisitor;
+import feedme.domain.schedule.timeset.operation.TimeSetUnaryOperationVisitor;
 import java.time.*;
 import java.time.zone.ZoneOffsetTransition;
 import java.time.zone.ZoneRules;
 import java.util.Optional;
+import org.jetbrains.annotations.NotNull;
 
 public class TimeOfDayTimeSet implements PeriodicTimeSet {
 
@@ -14,6 +17,9 @@ public class TimeOfDayTimeSet implements PeriodicTimeSet {
     private final boolean isOvernight;
 
     public TimeOfDayTimeSet(ZoneId timeZone, LocalTime startTime, LocalTime endTime) {
+        if (startTime.equals(endTime)) {
+            throw new IllegalArgumentException("Start time cannot equal end time");
+        }
         this.timeZone = timeZone;
         this.zoneRules = timeZone.getRules();
         this.startTime = startTime;
@@ -22,7 +28,7 @@ public class TimeOfDayTimeSet implements PeriodicTimeSet {
     }
 
     @Override
-    public Optional<TimeSpan> getPrevious(Instant time) throws TimeSetException.Unchecked {
+    public Optional<TimeSpan> getPrevious(@NotNull Instant time) throws TimeSetException.Unchecked {
         LocalDate date = time.atZone(timeZone).toLocalDate();
         Instant end = getLatestTime(endTime.atDate(date));
         if (time.isBefore(end)) {
@@ -33,27 +39,27 @@ public class TimeOfDayTimeSet implements PeriodicTimeSet {
             date = date.minusDays(1);
         }
         Instant start = getEarliestTime(startTime.atDate(date));
-        return Optional.of(TimeSpan.ofInstants(start, end));
+        return Optional.of(TimeSpan.withBounds(start, end));
     }
 
     @Override
-    public Optional<TimeSpan> getAt(Instant time) throws TimeSetException.Unchecked {
+    public Optional<TimeSpan> getAt(@NotNull Instant time) throws TimeSetException.Unchecked {
         LocalDate date = time.atZone(timeZone).toLocalDate();
         Instant start = getEarliestTime(startTime.atDate(date));
         if (!isOvernight) {
             if (time.isAfter(start) || time.equals(start)) {
                 Instant end = getLatestTime(endTime.atDate(date));
-                return Optional.of(TimeSpan.ofInstants(start, end));
+                return Optional.of(TimeSpan.withBounds(start, end));
             }
         } else {
             if (time.isAfter(start) || time.equals(start)) {
                 Instant end = getLatestTime(endTime.atDate(date.plusDays(1)));
-                return Optional.of(TimeSpan.ofInstants(start, end));
+                return Optional.of(TimeSpan.withBounds(start, end));
             } else {
                 Instant end = getLatestTime(endTime.atDate(date));
                 if (time.isBefore(end)) {
                     start = getEarliestTime(startTime.atDate(date.minusDays(1)));
-                    return Optional.of(TimeSpan.ofInstants(start, end));
+                    return Optional.of(TimeSpan.withBounds(start, end));
                 }
             }
         }
@@ -61,7 +67,7 @@ public class TimeOfDayTimeSet implements PeriodicTimeSet {
     }
 
     @Override
-    public Optional<TimeSpan> getNext(Instant time) throws TimeSetException.Unchecked {
+    public Optional<TimeSpan> getNext(@NotNull Instant time) throws TimeSetException.Unchecked {
         LocalDate date = time.atZone(timeZone).toLocalDate();
         Instant start = getEarliestTime(startTime.atDate(date));
         if (time.isAfter(start) || time.equals(start)) {
@@ -72,7 +78,42 @@ public class TimeOfDayTimeSet implements PeriodicTimeSet {
             date = date.plusDays(1);
         }
         Instant end = getLatestTime(endTime.atDate(date));
-        return Optional.of(TimeSpan.ofInstants(start, end));
+        return Optional.of(TimeSpan.withBounds(start, end));
+    }
+
+    @Override
+    public @NotNull TimeSet accept(TimeSetBinaryOperationVisitor visitor, TimeSet other) {
+        return visitor.visit(other, this);
+    }
+
+    @Override
+    public @NotNull TimeSet accept(TimeSetUnaryOperationVisitor visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return false;
+    }
+
+    public ZoneId getTimeZone() {
+        return timeZone;
+    }
+
+    public ZoneRules getZoneRules() {
+        return zoneRules;
+    }
+
+    public LocalTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public boolean isOvernight() {
+        return isOvernight;
     }
 
     private Instant getEarliestTime(LocalDateTime time) {

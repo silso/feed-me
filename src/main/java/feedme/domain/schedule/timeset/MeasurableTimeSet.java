@@ -4,34 +4,20 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public interface MeasurableTimeSet extends TimeSet {
-    Optional<TimeSpan> getFirst();
-    Optional<TimeSpan> getLast();
+public interface MeasurableTimeSet extends CountableTimeSet {
+    Optional<TimeSegment> measurableGetFirst();
+    Optional<TimeSegment> measurableGetLast();
 
     default Duration getDuration() {
-        return getFirst()
-            .map(_span -> Stream.iterate(
-                    getFirst().get(),
-                    (TimeSpan span) -> getNext(span.startTime()).isPresent(),
-                    (TimeSpan span) -> getNext(span.startTime()).orElseThrow()
+        return measurableGetFirst()
+            .map(first -> Stream.iterate(
+                    first,
+                    (TimeSegment span) -> getNext(span.start()).isPresent(),
+                    (TimeSegment span) -> getNext(span.start()).map(TimeSegment.class::cast).orElseThrow()
                 )
-                .map(TimeSpan::getDuration)
+                .map(TimeSegment::getDuration)
                 .reduce(Duration.ZERO, Duration::plus)
             )
             .orElse(Duration.ZERO);
-    }
-
-    default MeasurableTimeSet unionWith(MeasurableTimeSet other) {
-        return (MeasurableTimeSet) TimeSet.super.unionWith(other);
-    }
-
-    @Override
-    default MeasurableTimeSet unionWithTimeSpan(TimeSpan other) {
-        return (MeasurableTimeSet) TimeSet.super.unionWithTimeSpan(other);
-    }
-
-    @Override
-    default MeasurableTimeSet intersectWith(TimeSet other) {
-        return (MeasurableTimeSet) TimeSet.super.intersectWith(other);
     }
 }

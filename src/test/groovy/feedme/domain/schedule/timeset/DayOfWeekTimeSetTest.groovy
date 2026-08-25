@@ -1,6 +1,6 @@
 package feedme.domain.schedule.timeset
 
-import org.jetbrains.annotations.NotNull
+
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -8,7 +8,6 @@ import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
-import java.util.function.Function
 
 import static java.time.DayOfWeek.*
 
@@ -35,10 +34,10 @@ class DayOfWeekTimeSetTest extends Specification {
         LocalDate todayDay = dayAfterEpoch(today)
         Instant todayStart = todayDay.atStartOfDay(timeZone.toZoneId()).toInstant()
         Instant endOfPrevious = endOfPrevious(todayDay, prevEnd)
-        set.getPrevious(todayStart).orElseThrow() == TimeSpan.ofInstants(startOfPreviousOrSame(endOfPrevious.atZone(timeZone.toZoneId()).toLocalDate(), prevStart), endOfPrevious)
-        set.getAt(todayStart).map(res -> atPresent && res == TimeSpan.ofInstants(startOfPreviousOrSame(todayDay, atStart), endOfNextOrSame(todayDay, atEnd))).orElse(!atPresent)
+        set.getPrevious(todayStart).orElseThrow() == TimeSpan.withBounds(startOfPreviousOrSame(endOfPrevious.atZone(timeZone.toZoneId()).toLocalDate(), prevStart), endOfPrevious)
+        set.getAt(todayStart).map(res -> atPresent && res == TimeSpan.withBounds(startOfPreviousOrSame(todayDay, atStart), endOfNextOrSame(todayDay, atEnd))).orElse(!atPresent)
         Instant startOfNext = startOfNext(todayDay, nextStart)
-        set.getNext(todayStart).orElseThrow() == TimeSpan.ofInstants(startOfNext, endOfNextOrSame(startOfNext.atZone(timeZone.toZoneId()).toLocalDate(), nextEnd))
+        set.getNext(todayStart).orElseThrow() == TimeSpan.withBounds(startOfNext, endOfNextOrSame(startOfNext.atZone(timeZone.toZoneId()).toLocalDate(), nextEnd))
 
         where:
         days               | today            || prevStart         | prevEnd           | atPresent         | atStart           | atEnd             | nextStart         | nextEnd

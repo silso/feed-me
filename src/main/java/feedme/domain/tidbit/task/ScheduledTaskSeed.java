@@ -11,6 +11,7 @@ import feedme.domain.tidbit.action.TidbitActionException;
 import feedme.domain.tidbit.action.impl.EmitAction;
 import feedme.domain.tidbit.plan.impl.ScheduledTidbitPlan;
 import feedme.domain.tidbit.urgency.BuiltinUrgency;
+import feedme.util.InfInstant;
 import feedme.util.TimeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,7 +43,7 @@ public class ScheduledTaskSeed extends TaskSeed {
         Duration offset = Duration.ofMinutes(1);
         Duration minPeriod = Duration.ofMinutes(5);
         SortedSet<Instant> scheduledTimes = new TreeSet<>();
-        TimeSet availableTimes = schedule.getTimeSetFor(TaskScheduleState.Available).unionWith(TimeSpan.ofInstants(Instant.MIN, expiresAt));
+        TimeSet availableTimes = schedule.getTimeSetFor(TaskScheduleState.Available).unionWith(TimeSpan.withUpperBound(expiresAt));
         Instant currentTime = expiresAt.minus(offset);
         while (scheduledTimes.size() < tidbitCount) {
             if (availableTimes.contains(currentTime)) {
@@ -50,7 +51,13 @@ public class ScheduledTaskSeed extends TaskSeed {
                 currentTime = currentTime.minus(minPeriod);
             } else {
                 Instant checkTime = currentTime.minus(minPeriod);
-                currentTime = TimeUtils.earliest(availableTimes.getPreviousInclusive(checkTime).map(TimeSpan::lastTime).orElseThrow(), checkTime);
+                currentTime = TimeUtils.earliest(
+                    availableTimes
+                        .getPreviousInclusive(checkTime)
+                        .map(TimeSpan::end)
+                        .orElseThrow(),
+                    InfInstant.of(checkTime)
+                ).getInstantOrElseThrow();
             }
         }
         return new ScheduledTidbitPlan(scheduledTimes);

@@ -1,15 +1,18 @@
 package feedme.domain.schedule.timeset;
 
+import feedme.domain.schedule.timeset.operation.TimeSetBinaryOperationVisitor;
+import feedme.domain.schedule.timeset.operation.TimeSetUnaryOperationVisitor;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.TimeZone;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class DiscretePeriodicTimeSet<DiscreteTime extends DiscretePeriodicTimeSet.DiscreteInstant<DiscreteTime>> implements PeriodicTimeSet {
 
     @Override
-    public Optional<TimeSpan> getPrevious(Instant time) throws TimeSetException.Unchecked {
+    public Optional<TimeSpan> getPrevious(@NotNull Instant time) throws TimeSetException.Unchecked {
         DiscreteTime discreteTime = toDiscrete(time);
         DiscreteTime startTime;
         DiscreteTime endTime;
@@ -23,11 +26,11 @@ public abstract class DiscretePeriodicTimeSet<DiscreteTime extends DiscretePerio
 
         startTime = endTime.minus(-stepsSince(endTime));
 
-        return Optional.of(TimeSpan.ofInstants(startTime.getStart(), endTime.getEnd()));
+        return Optional.of(TimeSpan.withBounds(startTime.getStart(), endTime.getEnd()));
     }
 
     @Override
-    public Optional<TimeSpan> getAt(Instant time) throws TimeSetException.Unchecked {
+    public Optional<TimeSpan> getAt(@NotNull Instant time) throws TimeSetException.Unchecked {
         DiscreteTime discreteTime = toDiscrete(time);
         long stepsUntil = stepsUntil(discreteTime);
         if (stepsUntil <= 0) {
@@ -37,14 +40,14 @@ public abstract class DiscretePeriodicTimeSet<DiscreteTime extends DiscretePerio
                 throw new TimeSetException("CountdownFunction until and since contradict, until is non-positive, since is positive").unchecked();
             }
             DiscreteTime startTime = discreteTime.minus(-stepsSince);
-            return Optional.of(TimeSpan.ofInstants(startTime.getStart(), endTime.getEnd()));
+            return Optional.of(TimeSpan.withBounds(startTime.getStart(), endTime.getEnd()));
         }
 
         return Optional.empty();
     }
 
     @Override
-    public Optional<TimeSpan> getNext(Instant time) throws TimeSetException.Unchecked {
+    public Optional<TimeSpan> getNext(@NotNull Instant time) throws TimeSetException.Unchecked {
         DiscreteTime discreteTime = toDiscrete(time);
         DiscreteTime startTime;
         DiscreteTime endTime;
@@ -58,7 +61,17 @@ public abstract class DiscretePeriodicTimeSet<DiscreteTime extends DiscretePerio
 
         endTime = startTime.plus(-stepsUntil(startTime));
 
-        return Optional.of(TimeSpan.ofInstants(startTime.getStart(), endTime.getEnd()));
+        return Optional.of(TimeSpan.withBounds(startTime.getStart(), endTime.getEnd()));
+    }
+
+    @Override
+    public @NotNull TimeSet accept(TimeSetBinaryOperationVisitor visitor, TimeSet other) {
+        return visitor.visit(other, this);
+    }
+
+    @Override
+    public @NotNull TimeSet accept(TimeSetUnaryOperationVisitor visitor) {
+        return visitor.visit(this);
     }
 
     protected abstract DiscreteTime toDiscrete(Instant continuousTime);

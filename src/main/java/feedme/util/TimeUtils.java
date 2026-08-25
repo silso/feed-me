@@ -17,9 +17,9 @@ public final class TimeUtils {
         return Duration.ofSeconds(secondsPart, nanosPart);
     }
 
-    public static Instant earliest(Instant... times) {
-        Instant earliest = Instant.MAX;
-        for (Instant time : times) {
+    public static InfInstant earliest(InfInstant... times) {
+        InfInstant earliest = InfInstant.infiniteFuture();
+        for (InfInstant time : times) {
             if (time.isBefore(earliest)) {
                 earliest = time;
             }
@@ -29,9 +29,9 @@ public final class TimeUtils {
 
     public static final BinaryOperator<Instant> earliest = (Instant result, Instant element) -> element.isBefore(result) ? element : result;
 
-    public static Instant latest(Instant... times) {
-        Instant latest = Instant.MIN;
-        for (Instant time : times) {
+    public static InfInstant latest(InfInstant... times) {
+        InfInstant latest = InfInstant.infinitePast();
+        for (InfInstant time : times) {
             if (time.isAfter(latest)) {
                 latest = time;
             }
