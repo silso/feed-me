@@ -52,7 +52,7 @@ public class CompositeUnionTimeSet extends CompositeTimeSet {
 		@Nullable InfInstant end = null;
 		@Nullable InfInstant newStart = null;
 		@Nullable InfInstant newEnd = null;
-		// TODO: set limit
+		int i = 0;
 		do {
 			start = newStart;
 			end = newEnd;
@@ -61,7 +61,7 @@ public class CompositeUnionTimeSet extends CompositeTimeSet {
 				newStart =
 					sets
 						.stream()
-						.map(set -> set.getContiguous(startTestTime))
+						.map(set -> set.getAtEndInclusive(startTestTime))
 						.filter(Optional::isPresent)
 						.map(Optional::get)
 						.map(TimeSpan::start)
@@ -73,11 +73,14 @@ public class CompositeUnionTimeSet extends CompositeTimeSet {
 				newEnd =
 					sets
 						.stream()
-						.map(set -> set.getContiguous(endTestTime))
+						.map(set -> set.getAtEndInclusive(endTestTime))
 						.filter(Optional::isPresent)
 						.map(Optional::get)
 						.map(TimeSpan::end)
 						.reduce(TimeUtils::latest).orElse(null);
+			}
+			if (++i >= ITERATION_LIMIT) {
+				throw new TimeSetException("Failed to find time span in iteration limit").unchecked();
 			}
 		} while (!Objects.equals(start, newStart) || !Objects.equals(end, newEnd));
 		if (start == null || end == null) {

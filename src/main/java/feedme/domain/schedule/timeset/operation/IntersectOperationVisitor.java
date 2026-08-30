@@ -1,6 +1,7 @@
 package feedme.domain.schedule.timeset.operation;
 
 import feedme.domain.schedule.timeset.*;
+import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 public class IntersectOperationVisitor implements TimeSetBinaryOperationVisitor {
@@ -27,6 +28,11 @@ public class IntersectOperationVisitor implements TimeSetBinaryOperationVisitor 
 	@Override
 	public @NotNull TimeSet visit(TimeSet first, DiscretePeriodicTimeSet<?> second) {
 		return first.accept(new DiscretePeriodicTimeSetIntersectOperationVisitor(this, second));
+	}
+
+	@Override
+	public @NotNull TimeSet visit(TimeSet first, DurationTimeSet second) {
+		return new CompositeIntersectTimeSet(List.of(first, second));
 	}
 
 	@Override

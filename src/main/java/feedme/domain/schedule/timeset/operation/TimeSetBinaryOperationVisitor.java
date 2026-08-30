@@ -13,9 +13,7 @@ public interface TimeSetBinaryOperationVisitor {
     default @NotNull TimeSet visit(TimeSet first, TimeOfDayTimeSet second) {
         throw new UnsupportedOperationException("Unimplemented");
     }
-    default @NotNull TimeSet visit(TimeSet first, DurationTimeSet second) {
-        throw new UnsupportedOperationException("Unimplemented");
-    }
+    @NotNull TimeSet visit(TimeSet first, DurationTimeSet second);
 
     @NotNull TimeSet visit(TimeSet first, EmptyTimeSet second);
     @NotNull TimeSet visit(TimeSet first, EverythingTimeSet second);

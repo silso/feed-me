@@ -2,6 +2,7 @@ package feedme.domain.schedule.timeset
 
 import feedme.domain.schedule.timeset.operation.TimeSetBinaryOperationVisitor
 import feedme.domain.schedule.timeset.operation.TimeSetUnaryOperationVisitor
+import feedme.util.InfInstant
 import org.jetbrains.annotations.NotNull
 import spock.lang.Specification
 
@@ -12,7 +13,10 @@ class TimeSetDefaultsTest extends Specification {
     private static nanosAfterEpoch(long nanos) {
         return Instant.EPOCH.plusNanos(nanos)
     }
-    private static nanosAfterEpoch(Instant time) {
+    private static nanosAfterEpochInf(long nanos) {
+        return InfInstant.of(Instant.EPOCH.plusNanos(nanos))
+    }
+    private static nanosAfterEpochInf(InfInstant time) {
         return time
     }
 
@@ -28,7 +32,7 @@ class TimeSetDefaultsTest extends Specification {
     def "IntersectWithTimeSpan"() {
         when:
         def resultSet = new DurationTimeSet(nanosAfterEpoch(aAnchor), Duration.ofNanos(aBetween), Duration.ofNanos(aOn))
-                .intersectWithTimeSpan(TimeSpan.withBounds(nanosAfterEpoch(bStart), nanosAfterEpoch(bEnd)))
+                .intersectWith(TimeSpan.withBounds(nanosAfterEpoch(bStart), nanosAfterEpoch(bEnd)))
 
         then:
         resultSet.getPrevious(nanosAfterEpoch(time)).map(res -> previousPresent && res == TimeSpan.withBounds(nanosAfterEpoch(previousStart), nanosAfterEpoch(previousEnd))).orElse(!previousPresent)
@@ -96,23 +100,23 @@ class TimeSetDefaultsTest extends Specification {
         10      | 20       | 10  | 5      | 35   | 200  || true  | 30    | 35    | false | 0     | 0     | false | 0     | 0
     }
 
-    private static Instant MIN = Instant.MIN
-    private static Instant MIN1 = Instant.MIN.plusNanos(1)
-    private static Instant MAX = Instant.MAX
-    private static Instant MAX1 = Instant.MAX.minusNanos(1)
+    private static InfInstant MIN = InfInstant.infinitePast()
+    private static InfInstant MIN1 = InfInstant.of(Instant.MIN.plusNanos(1))
+    private static InfInstant MAX = InfInstant.infiniteFuture()
+    private static InfInstant MAX1 = InfInstant.of(Instant.MAX.minusNanos(1))
 
     def "invert TimeSpan with default method"(){
         when:
-        def inputSet = new DefaultsTimeSpan(TimeSpan.withBounds(nanosAfterEpoch(startTime), nanosAfterEpoch(endTime)))
+        def inputSet = new DefaultsTimeSpan(TimeSpan.withBounds(nanosAfterEpochInf(startTime), nanosAfterEpochInf(endTime)))
         def resultSet = inputSet.invert()
 
         then:
-        resultSet.invert().getPrevious(nanosAfterEpoch(time)) == inputSet.getPrevious(nanosAfterEpoch(time))
-        resultSet.invert().getAt(nanosAfterEpoch(time)) == inputSet.getAt(nanosAfterEpoch(time))
-        resultSet.invert().getNext(nanosAfterEpoch(time)) == inputSet.getNext(nanosAfterEpoch(time))
-        resultSet.getPrevious(nanosAfterEpoch(time)).map(res -> previousPresent && res == TimeSpan.withBounds(nanosAfterEpoch(previousStart), nanosAfterEpoch(previousEnd))).orElse(!previousPresent)
-        resultSet.getAt(nanosAfterEpoch(time)).map(res -> atPresent && res == TimeSpan.withBounds(nanosAfterEpoch(atStart), nanosAfterEpoch(atEnd))).orElse(!atPresent)
-        resultSet.getNext(nanosAfterEpoch(time)).map(res -> nextPresent && res == TimeSpan.withBounds(nanosAfterEpoch(nextStart), nanosAfterEpoch(nextEnd))).orElse(!nextPresent)
+        resultSet.invert().getPrevious(nanosAfterEpochInf(time)) == inputSet.getPrevious(nanosAfterEpochInf(time))
+        resultSet.invert().getAt(nanosAfterEpochInf(time)) == inputSet.getAt(nanosAfterEpochInf(time))
+        resultSet.invert().getNext(nanosAfterEpochInf(time)) == inputSet.getNext(nanosAfterEpochInf(time))
+        resultSet.getPrevious(nanosAfterEpochInf(time)).map(res -> previousPresent && res == TimeSpan.withBounds(nanosAfterEpochInf(previousStart), nanosAfterEpochInf(previousEnd))).orElse(!previousPresent)
+        resultSet.getAt(nanosAfterEpochInf(time)).map(res -> atPresent && res == TimeSpan.withBounds(nanosAfterEpochInf(atStart), nanosAfterEpochInf(atEnd))).orElse(!atPresent)
+        resultSet.getNext(nanosAfterEpochInf(time)).map(res -> nextPresent && res == TimeSpan.withBounds(nanosAfterEpochInf(nextStart), nanosAfterEpochInf(nextEnd))).orElse(!nextPresent)
 
         where:
         startTime | endTime | time || previousPresent | previousStart | previousEnd | atPresent | atStart | atEnd | nextPresent | nextStart | nextEnd
@@ -124,7 +128,7 @@ class TimeSetDefaultsTest extends Specification {
         0     | 10    | 10    || true  | MIN   | 0     | true  | 10    | MAX   | false | 0     | 0
         0     | 10    | 11    || true  | MIN   | 0     | true  | 10    | MAX   | false | 0     | 0
         0     | 10    | MAX1  || true  | MIN   | 0     | true  | 10    | MAX   | false | 0     | 0
-        0     | 10    | MAX   || true  | MIN   | 0     | true  | 10    | MAX   | false | 0     | 0
+        0     | 10    | MAX   || true  | 10    | MAX   | false | 0     | 0     | false | 0     | 0
         9     | 10    | MIN   || false | 0     | 0     | true  | MIN   | 9     | true  | 10    | MAX
         9     | 10    | MIN1  || false | 0     | 0     | true  | MIN   | 9     | true  | 10    | MAX
         9     | 10    | -10   || false | 0     | 0     | true  | MIN   | 9     | true  | 10    | MAX
@@ -133,10 +137,10 @@ class TimeSetDefaultsTest extends Specification {
         9     | 10    | 10    || true  | MIN   | 9     | true  | 10    | MAX   | false | 0     | 0
         9     | 10    | 11    || true  | MIN   | 9     | true  | 10    | MAX   | false | 0     | 0
         9     | 10    | MAX1  || true  | MIN   | 9     | true  | 10    | MAX   | false | 0     | 0
-        9     | 10    | MAX   || true  | MIN   | 9     | true  | 10    | MAX   | false | 0     | 0
+        9     | 10    | MAX   || true  | 10    | MAX   | false | 0     | 0     | false | 0     | 0
     }
 
-    private static class DefaultsTimeSpan implements TimeSet {
+    private static class DefaultsTimeSpan implements CountableTimeSet {
         private final TimeSpan delegate
 
         DefaultsTimeSpan(TimeSpan delegate) {
@@ -144,28 +148,30 @@ class TimeSetDefaultsTest extends Specification {
         }
 
         @Override
-        Optional<TimeSpan> getPrevious(@NotNull Instant time) throws TimeSetException.Unchecked {
+        Optional<TimeSpan> getPrevious(@NotNull InfInstant time) throws TimeSetException.Unchecked {
             return this.delegate.getPrevious(time)
         }
 
         @Override
-        Optional<TimeSpan> getAt(@NotNull Instant time) throws TimeSetException.Unchecked {
+        Optional<TimeSpan> getAt(@NotNull InfInstant time) throws TimeSetException.Unchecked {
             return this.delegate.getAt(time)
         }
 
         @Override
-        Optional<TimeSpan> getNext(@NotNull Instant time) throws TimeSetException.Unchecked {
+        Optional<TimeSpan> getNext(@NotNull InfInstant time) throws TimeSetException.Unchecked {
             return this.delegate.getNext(time)
         }
 
+        @NotNull
         @Override
         TimeSet accept(TimeSetBinaryOperationVisitor visitor, TimeSet other) {
-            throw new UnsupportedOperationException("We don't accept visitors, no thank you")
+            return this.delegate.accept(visitor, other)
         }
 
+        @NotNull
         @Override
         TimeSet accept(TimeSetUnaryOperationVisitor visitor) {
-            throw new UnsupportedOperationException("We don't accept visitors, no thank you")
+            return this.delegate.accept(visitor)
         }
 
         @Override
@@ -184,17 +190,17 @@ class TimeSetDefaultsTest extends Specification {
         def inputSet = new TimeSpanSet();
 
         when:
-        inputSet.add(TimeSpan.withBounds(nanosAfterEpoch(aStart), nanosAfterEpoch(aEnd)))
-        inputSet.add(TimeSpan.withBounds(nanosAfterEpoch(bStart), nanosAfterEpoch(bEnd)))
+        inputSet.add(TimeSpan.withBounds(nanosAfterEpochInf(aStart), nanosAfterEpochInf(aEnd)))
+        inputSet.add(TimeSpan.withBounds(nanosAfterEpochInf(bStart), nanosAfterEpochInf(bEnd)))
         def resultSet = inputSet.invert()
 
         then:
-        resultSet.invert().getPrevious(nanosAfterEpoch(time)) == inputSet.getPrevious(nanosAfterEpoch(time))
-        resultSet.invert().getAt(nanosAfterEpoch(time)) == inputSet.getAt(nanosAfterEpoch(time))
-        resultSet.invert().getNext(nanosAfterEpoch(time)) == inputSet.getNext(nanosAfterEpoch(time))
-        resultSet.getPrevious(nanosAfterEpoch(time)).map(res -> previousPresent && res == TimeSpan.withBounds(nanosAfterEpoch(previousStart), nanosAfterEpoch(previousEnd))).orElse(!previousPresent)
-        resultSet.getAt(nanosAfterEpoch(time)).map(res -> atPresent && res == TimeSpan.withBounds(nanosAfterEpoch(atStart), nanosAfterEpoch(atEnd))).orElse(!atPresent)
-        resultSet.getNext(nanosAfterEpoch(time)).map(res -> nextPresent && res == TimeSpan.withBounds(nanosAfterEpoch(nextStart), nanosAfterEpoch(nextEnd))).orElse(!nextPresent)
+        resultSet.invert().getPrevious(nanosAfterEpochInf(time)) == inputSet.getPrevious(nanosAfterEpochInf(time))
+        resultSet.invert().getAt(nanosAfterEpochInf(time)) == inputSet.getAt(nanosAfterEpochInf(time))
+        resultSet.invert().getNext(nanosAfterEpochInf(time)) == inputSet.getNext(nanosAfterEpochInf(time))
+        resultSet.getPrevious(nanosAfterEpochInf(time)).map(res -> previousPresent && res == TimeSpan.withBounds(nanosAfterEpochInf(previousStart), nanosAfterEpochInf(previousEnd))).orElse(!previousPresent)
+        resultSet.getAt(nanosAfterEpochInf(time)).map(res -> atPresent && res == TimeSpan.withBounds(nanosAfterEpochInf(atStart), nanosAfterEpochInf(atEnd))).orElse(!atPresent)
+        resultSet.getNext(nanosAfterEpochInf(time)).map(res -> nextPresent && res == TimeSpan.withBounds(nanosAfterEpochInf(nextStart), nanosAfterEpochInf(nextEnd))).orElse(!nextPresent)
 
         where:
         aStart | aEnd | bStart | bEnd | time || previousPresent | previousStart | previousEnd | atPresent | atStart | atEnd | nextPresent | nextStart | nextEnd
@@ -206,6 +212,6 @@ class TimeSetDefaultsTest extends Specification {
         -5    | 5     | 6     | 10    | 6     || true  | 5     | 6     | false | 0     | 0     | true  | 10    | MAX
         -5    | 5     | 6     | 10    | 10    || true  | 5     | 6     | true  | 10    | MAX   | false | 0     | 0
         -5    | 5     | 6     | 10    | 11    || true  | 5     | 6     | true  | 10    | MAX   | false | 0     | 0
-        -5    | 5     | 6     | 10    | MAX   || true  | 5     | 6     | true  | 10    | MAX   | false | 0     | 0
+        -5    | 5     | 6     | 10    | MAX   || true  | 10    | MAX   | false | 0     | 0     | false | 0     | 0
     }
 }
