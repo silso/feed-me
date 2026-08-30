@@ -157,6 +157,7 @@ class TimeSetTest {
 
     @Test
     public void testSimpleTimeSetOperations() {
+        // TODO: test associativity
         // empty set unions
         assertEquals(emptySet, emptySet.unionWith(emptySet));
         assertEquals(spanB, emptySet.unionWith(spanB));
@@ -183,6 +184,7 @@ class TimeSetTest {
         assertEquals(setA, setA.unionWith(instantTimeSpan(t[3].minusNanos(1))));
         assertNotEquals(setA, setA.unionWith(instantTimeSpan(t[3])));
         assertNotEquals(setA, setA.unionWith(instantTimeSpan(t[4])));
+        // TODO: equality operator
         assertEquals(TimeSpan.withBounds(t[1], t[7]), setA.unionWith(spanB));
 
         // set A intersections

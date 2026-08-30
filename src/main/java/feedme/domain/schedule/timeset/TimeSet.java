@@ -1,9 +1,9 @@
 package feedme.domain.schedule.timeset;
 
 import feedme.domain.schedule.timeset.operation.*;
+import feedme.util.InfInstant;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -69,36 +69,32 @@ public interface TimeSet {
         return getAt(time).or(() -> getNext(time));
     }
 
-    default Optional<TimeSpan> getContiguous(Instant time) throws TimeSetException.Unchecked {
-        return getAt(time).or(() -> getPrevious(time).filter(span -> span.end().getInstant().orElseThrow().equals(time)));
-    }
-
     default boolean contains(Instant time) {
         return getAt(time).isPresent();
     }
 
-    default Stream<TimeSpan> streamForwardFrom(Instant time) {
-        if (isEmpty()) {
-            return Stream.empty();
-        }
-        return Stream.iterate(
-                time,
-                (Instant currentTime) -> getNext(currentTime).isPresent(),
-                (Instant currentTime) -> getNext(currentTime).orElseThrow().start().getInstant().orElseThrow()
-            ).map(this::getAt)
-            .map(Optional::orElseThrow);
+    // TODO: create a clearer API for switching start and end inclusivity and exclusivity
+
+    default Optional<TimeSpan> getPreviousEndInclusive(Instant time) throws TimeSetException.Unchecked {
+        return getPrevious(time).flatMap(span -> {
+            if (span.end().equals(InfInstant.of(time))) {
+                if (span.start().isInfinitePast()) {
+                    return Optional.empty();
+                } else {
+                    return getPrevious(span.start().getInstantOrElseThrow());
+                }
+            } else {
+                return Optional.of(span);
+            }
+        });
     }
 
-    default Stream<TimeSpan> streamBackwardFrom(Instant time) {
-        if (isEmpty()) {
-            return Stream.empty();
-        }
-        return Stream.iterate(
-                time,
-                (Instant currentTime) -> getPrevious(currentTime).isPresent(),
-                (Instant currentTime) -> getPrevious(currentTime).orElseThrow().start().getInstant().orElseThrow()
-            ).map(this::getAt)
-            .map(Optional::orElseThrow);
+    default Optional<TimeSpan> getAtEndInclusive(Instant time) throws TimeSetException.Unchecked {
+        return getAt(time).or(() -> getPrevious(time).filter(span -> span.end().getInstant().orElseThrow().equals(time)));
+    }
+
+    default boolean containsEndInclusive(Instant time) {
+        return getAtEndInclusive(time).isPresent();
     }
 
     default TimeSet unionWith(TimeSet other) {

@@ -36,17 +36,19 @@ public class TimeSpan implements CountableTimeSet {
 
     @Override
     public Optional<TimeSpan> getPrevious(InfInstant time) {
-        if (end().isInfiniteFuture()) {
-            return Optional.empty();
-        }
+        // I had this behavior before, don't remember why
+        // if (end().isInfiniteFuture()) {
+        //     return Optional.empty();
+        // }
         return OptionalUtils.fromCondition(() -> end().isBefore(time) || end().equals(time), this);
     }
 
     @Override
     public Optional<TimeSpan> getAt(InfInstant time) {
-        if (end().isInfiniteFuture() && time.isInfiniteFuture()) {
-            return Optional.of(this);
-        }
+        // And this
+        // if (end().isInfiniteFuture() && time.isInfiniteFuture()) {
+        //     return Optional.of(this);
+        // }
         return OptionalUtils.fromCondition(
             () -> start().equals(time) || (start().isBefore(time) && end().isAfter(time)),
             this
@@ -92,6 +94,10 @@ public class TimeSpan implements CountableTimeSet {
 
     public boolean hasOverlapWith(TimeSpan other) {
         return contains(other.start()) || other.contains(this.start());
+    }
+
+    public boolean contains(TimeSpan other) {
+        return !other.start().isBefore(start()) && !other.end().isAfter(end());
     }
 
     // TODO: more nuanced equality and hashcode
@@ -161,5 +167,9 @@ public class TimeSpan implements CountableTimeSet {
         } else {
             return first;
         }
+    }
+
+    public static int compareStartTimes(TimeSpan first, TimeSpan second) {
+        return first.start().compareTo(second.start());
     }
 }

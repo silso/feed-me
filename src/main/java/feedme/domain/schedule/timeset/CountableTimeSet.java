@@ -1,6 +1,5 @@
 package feedme.domain.schedule.timeset;
 
-import com.google.common.collect.Streams;
 import feedme.util.InfInstant;
 import java.time.Instant;
 import java.util.Iterator;
@@ -70,22 +69,10 @@ public interface CountableTimeSet extends TimeSet {
 			return Stream.empty();
 		}
 		return Stream.iterate(
-				time,
-				(InfInstant currentTime) -> getNext(currentTime).isPresent(),
-				(InfInstant currentTime) -> getNext(currentTime).orElseThrow().start()
-			).map(this::getAt)
-			.flatMap(Optional::stream);
-	}
-
-	default Stream<TimeSpan> streamBackwardFrom(InfInstant time) {
-		if (isEmpty()) {
-			return Stream.empty();
-		}
-		return Stream.iterate(
-				time,
-				(InfInstant currentTime) -> getPrevious(currentTime).isPresent(),
-				(InfInstant currentTime) -> getPrevious(currentTime).orElseThrow().start()
-			).map(this::getAt)
+				getNextInclusive(time),
+				Optional::isPresent,
+				(Optional<TimeSpan> span) -> getNext(span.orElseThrow().start())
+			)
 			.map(Optional::orElseThrow);
 	}
 
@@ -94,19 +81,11 @@ public interface CountableTimeSet extends TimeSet {
 			return Stream.empty();
 		}
 		if (getFirst().get().start().isInfinitePast()) {
-			return Streams.concat(Stream.of(getFirst().get()), streamForwardFrom(InfInstant.infinitePast()));
+			// Which one is it?
+			// return Streams.concat(Stream.of(getFirst().get()), streamForwardFrom(InfInstant.infinitePast()));
+			return streamForwardFrom(InfInstant.infinitePast());
 		}
 		return streamForwardFrom(InfInstant.infinitePast());
-	}
-
-	default Stream<TimeSpan> streamBackward() {
-		if (isEmpty()) {
-			return Stream.empty();
-		}
-		if (getLast().get().end().isInfiniteFuture()) {
-			return Streams.concat(Stream.of(getLast().get()), streamBackwardFrom(InfInstant.infiniteFuture()));
-		}
-		return streamBackwardFrom(InfInstant.infiniteFuture());
 	}
 
 	default Iterable<TimeSpan> iterateForward() {
@@ -114,15 +93,6 @@ public interface CountableTimeSet extends TimeSet {
 			@Override
 			public @NotNull Iterator<TimeSpan> iterator() {
 				return streamForward().iterator();
-			}
-		};
-	}
-
-	default Iterable<TimeSpan> iterateBackward() {
-		return new Iterable<>() {
-			@Override
-			public @NotNull Iterator<TimeSpan> iterator() {
-				return streamBackward().iterator();
 			}
 		};
 	}

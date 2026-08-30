@@ -1,10 +1,10 @@
 package feedme.domain.schedule.timeset.operation;
 
+import com.google.common.collect.Iterators;
 import feedme.domain.schedule.timeset.*;
-import feedme.util.InfInstant;
 import feedme.util.TimeUtils;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Iterator;
+import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 class TimeSpanSetIntersectOperationVisitor extends CurriedTsBinaryOpVisitor.DelegateToAll<TimeSpanSet> {
@@ -14,32 +14,73 @@ class TimeSpanSetIntersectOperationVisitor extends CurriedTsBinaryOpVisitor.Dele
 
 	@Override
 	public @NotNull TimeSet visit(TimeSpan set) {
-		// TODO: implement
-		if (thisSet.isEmpty()) {
-			return EmptyTimeSet.get();
-		}
-		if (thisSet.size() == 1) {
-			return thisSet.getFirst().get().intersectWith(set);
-		}
-		MutableTimeSet set1 = MutableTimeSet.create();
-		Set<TimeSpan> contiguousTimeSpans = new HashSet<>();
-		thisSet.streamForward().forEach(span -> {
-			if (span.isContiguousWith(set)) {
-				contiguousTimeSpans.add(span);
-			} else {
-				set1.add(span);
-			}
-		});
-		set1.add(TimeSpan.withBounds(
-			TimeUtils.earliest(contiguousTimeSpans.stream().map(TimeSpan::start).toArray(InfInstant[]::new)),
-			TimeUtils.latest(contiguousTimeSpans.stream().map(TimeSpan::end).toArray(InfInstant[]::new))
-		));
-		return set1;
+		return timeSpanSetIntersectTimeSpan(thisSet, set);
 	}
 
 	@Override
 	public @NotNull TimeSet visit(TimeSpanSet set) {
-		return null;
+		if (thisSet.isEmpty()) {
+			return EmptyTimeSet.get();
+		}
+		if (set.isEmpty()) {
+			return EmptyTimeSet.get();
+		}
+		if (thisSet.size() == 1) {
+			return timeSpanSetIntersectTimeSpan(set, thisSet.getFirst().get());
+		}
+		if (set.size() == 1) {
+			return timeSpanSetIntersectTimeSpan(thisSet, set.getFirst().get());
+		}
+
+		MutableTimeSet newSet = MutableTimeSet.create();
+		Iterator<TimeSpan> merged = Iterators.mergeSorted(List.of(thisSet.iterateForward().iterator(), set.iterateForward().iterator()), TimeSpan::compareStartTimes);
+		@NotNull TimeSpan aSpan;
+		@NotNull TimeSpan bSpan = merged.next();
+		while (merged.hasNext()) {
+			aSpan = bSpan;
+			bSpan = merged.next();
+			if (aSpan.hasOverlapWith(bSpan)) {
+				newSet.add(TimeSpan.withBounds(
+					TimeUtils.latest(aSpan.start(), bSpan.start()),
+					TimeUtils.earliest(aSpan.end(), bSpan.end())
+				));
+			}
+		}
+
+		if (newSet.isEmpty()) {
+			return EmptyTimeSet.get();
+		}
+
+		return newSet;
 	}
 
+	private static @NotNull TimeSet timeSpanSetIntersectTimeSpan(@NotNull TimeSpanSet set, @NotNull TimeSpan span) {
+		if (set.isEmpty()) {
+			return EmptyTimeSet.get();
+		}
+		if (set.size() == 1) {
+			return set.getFirst().get().intersectWith(span);
+		}
+		MutableTimeSet newSet = MutableTimeSet.create();
+		set.streamForwardFrom(span.start()).takeWhile(setSpan -> setSpan.hasOverlapWith(span)).forEach(setSpan -> {
+			if (!span.contains(setSpan)) {
+				newSet.add(TimeSpan.withBounds(
+					TimeUtils.latest(span.start(), setSpan.start()),
+					TimeUtils.earliest(span.end(), setSpan.end())
+				));
+			} else {
+				newSet.add(setSpan);
+			}
+		});
+
+		// This logic and the one below should be standardized somewhere
+		if (newSet.isEmpty()) {
+			return EmptyTimeSet.get();
+		}
+		if (newSet.size() == 1) {
+			return newSet.getFirst().orElseThrow();
+		}
+
+		return newSet;
+	}
 }

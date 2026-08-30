@@ -20,43 +20,51 @@ public class CompositeIntersectTimeSet extends CompositeTimeSet {
 		return super.getSets();
 	}
 
-	// This is uglier than the other one since you can't use getAt for the end time.
-	// TODO: make this look nicer
 	@Override
 	public Optional<TimeSpan> getPrevious(@NotNull Instant time) throws TimeSetException.Unchecked {
-		Instant testTime = null;
-		// TODO: set limit
-		while (true) {
-			testTime = Optional.ofNullable(testTime).orElse(time);
-			final Instant testTime0 = testTime;
-			List<TimeSpan> allPrevious = sets
-				.stream()
-				.map(set -> set.getPrevious(testTime0))
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.toList();
-			if (allPrevious.size() != sets.size()) {
-				return Optional.empty();
-			}
-			InfInstant latestStart = InfInstant.infiniteFuture();
-			InfInstant earliestEnd = InfInstant.infinitePast();
-			for (TimeSpan timeSpan : allPrevious) {
-				latestStart = TimeUtils.latest(latestStart, timeSpan.start());
-				earliestEnd = TimeUtils.earliest(earliestEnd, timeSpan.end());
-			}
-			if (latestStart.isInfiniteFuture()) {
-				return Optional.empty();
-			}
-			if (latestStart.isInfinitePast()) {
-				return Optional.of(TimeSpan.withBounds(latestStart, earliestEnd));
-			}
-			final Instant latestStartInstant = latestStart.getInstantOrElseThrow();
-			// TODO: memoize getPrevious, getAt, getNext anyways?
-			if (sets.stream().allMatch(set -> set.contains(latestStartInstant))) {
-				return getAt(latestStartInstant);
-			}
-			testTime = latestStartInstant;
+		Instant testTime = sets
+			.stream()
+			.map(set -> set.getPrevious(time))
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.map(TimeSpan::end)
+			.reduce(TimeUtils::latest)
+			.map(InfInstant::getInstantOrElseThrow)
+			.orElse(null);
+		if (testTime == null) {
+			return Optional.empty();
 		}
+		for (int i = 0; i < ITERATION_LIMIT; i++) {
+			boolean found = true;
+			InfInstant latestStart = InfInstant.infinitePast();
+			// Check if every set has a span that contains (end inclusive) the test time
+			for (final TimeSet set : sets) {
+				if (!(set.getPreviousInclusive(testTime).orElse(null) instanceof TimeSpan span)) {
+					return Optional.empty();
+				}
+				// Unless that span starts at the test time
+				if (!span.containsEndInclusive(testTime) || span.start().equals(InfInstant.of(testTime))) {
+					found = false;
+					break;
+				}
+				latestStart = TimeUtils.latest(latestStart, span.start());
+			}
+			// If that is the case, we return a time span with the latest start as the start, and the test time as the end
+			if (found) {
+				assert latestStart != null;
+				return Optional.of(TimeSpan.withBounds(latestStart, InfInstant.of(testTime)));
+			}
+			// Otherwise we find the closest previous end time and repeat
+			InfInstant latestEnd = InfInstant.infinitePast();
+			for (final TimeSet set : sets) {
+				if (set.getPreviousEndInclusive(testTime).map(TimeSpan::end).orElse(null) instanceof InfInstant end) {
+					// Pretty sure we can skip earlier than this but I can't think it through right now
+					latestEnd = TimeUtils.latest(latestEnd, end);
+				}
+			}
+			testTime = latestEnd.getInstantOrElseThrow();
+		}
+		throw new TimeSetException("Failed to find time set in iteration limit").unchecked();
 	}
 
 	@Override
@@ -81,30 +89,49 @@ public class CompositeIntersectTimeSet extends CompositeTimeSet {
 
 	@Override
 	public Optional<TimeSpan> getNext(@NotNull Instant time) throws TimeSetException.Unchecked {
-		Instant testTime = null;
-		// TODO: set limit
-		while (true) {
-			testTime = Optional.ofNullable(testTime).orElse(time);
-			final Instant testTime0 = testTime;
-			if (!(sets
-				.stream()
-				.map(set -> set.getNext(testTime0))
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.map(TimeSpan::start)
-				.reduce(TimeUtils::latest)
-				.map(InfInstant::getInstantOrElseThrow)
-				.orElse(null) instanceof Instant latestStart
-			)) {
-				return Optional.empty();
-			}
-			// TODO: inefficient, this iterates over sets like 3 times
-			// TODO: memoize getPrevious, getAt, getNext anyways?
-			if (sets.stream().allMatch(set -> set.contains(latestStart))) {
-				return getAt(latestStart);
-			}
-			testTime = latestStart;
+		Instant testTime = sets
+			.stream()
+			.map(set -> set.getNext(time))
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.map(TimeSpan::start)
+			.reduce(TimeUtils::earliest)
+			.map(InfInstant::getInstantOrElseThrow)
+			.orElse(null);
+		if (testTime == null) {
+			return Optional.empty();
 		}
+		for (int i = 0; i < ITERATION_LIMIT; i++) {
+			boolean found = true;
+			InfInstant earliestEnd = InfInstant.infiniteFuture();
+			// Check if every set has a span that contains (end inclusive) the test time
+			for (final TimeSet set : sets) {
+				if (!(set.getNextInclusive(testTime).orElse(null) instanceof TimeSpan span)) {
+					return Optional.empty();
+				}
+				// Unless that span starts at the test time
+				if (!span.contains(testTime)) {
+					found = false;
+					break;
+				}
+				earliestEnd = TimeUtils.earliest(earliestEnd, span.end());
+			}
+			// If that is the case, we return a time span with the latest start as the start, and the test time as the end
+			if (found) {
+				assert earliestEnd != null;
+				return Optional.of(TimeSpan.withBounds(InfInstant.of(testTime), earliestEnd));
+			}
+			// Otherwise we find the closest previous end time and repeat
+			InfInstant earliestStart = InfInstant.infiniteFuture();
+			for (final TimeSet set : sets) {
+				if (set.getNext(testTime).map(TimeSpan::start).orElse(null) instanceof InfInstant start) {
+					// Pretty sure we can skip earlier than this but I can't think it through right now
+					earliestStart = TimeUtils.earliest(earliestStart, start);
+				}
+			}
+			testTime = earliestStart.getInstantOrElseThrow();
+		}
+		throw new TimeSetException("Failed to find time span in iteration limit").unchecked();
 	}
 
 	@Override
