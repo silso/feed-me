@@ -9,5 +9,5 @@ import java.time.Instant;
  * on tidbits.
  */
 public abstract class Seed {
-    public abstract void createTidbits(@NotNull Instant now);
+    public abstract void updateTidbits(@NotNull Instant now);
 }

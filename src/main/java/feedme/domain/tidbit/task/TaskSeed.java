@@ -11,10 +11,10 @@ public abstract class TaskSeed extends Seed {
     public final TaskPriority priority;
     protected final TidbitRepository repository;
 
-    public TaskSeed(TidbitRepository repository, String instruction, Instant expiresAt) {
+    public TaskSeed(TidbitRepository repository, String instruction, Instant expiresAt, TaskPriority priority) {
         this.repository = repository;
         this.instruction = instruction;
         this.expiresAt = expiresAt;
-        this.priority = TaskPriority.Minor;
+        this.priority = priority;
     }
 }

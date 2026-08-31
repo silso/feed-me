@@ -31,6 +31,11 @@ public class IntersectOperationVisitor implements TimeSetBinaryOperationVisitor 
 	}
 
 	@Override
+	public @NotNull TimeSet visit(TimeSet first, TimeOfDayTimeSet second) {
+		return new CompositeIntersectTimeSet(List.of(first, second));
+	}
+
+	@Override
 	public @NotNull TimeSet visit(TimeSet first, DurationTimeSet second) {
 		return new CompositeIntersectTimeSet(List.of(first, second));
 	}

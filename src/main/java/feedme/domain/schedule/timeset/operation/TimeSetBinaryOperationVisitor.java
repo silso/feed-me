@@ -10,9 +10,7 @@ public interface TimeSetBinaryOperationVisitor {
     @NotNull TimeSet visit(TimeSet first, CompositeUnionTimeSet second);
     @NotNull TimeSet visit(TimeSet first, CompositeIntersectTimeSet second);
     @NotNull TimeSet visit(TimeSet first, DiscretePeriodicTimeSet<?> second);
-    default @NotNull TimeSet visit(TimeSet first, TimeOfDayTimeSet second) {
-        throw new UnsupportedOperationException("Unimplemented");
-    }
+    @NotNull TimeSet visit(TimeSet first, TimeOfDayTimeSet second);
     @NotNull TimeSet visit(TimeSet first, DurationTimeSet second);
 
     @NotNull TimeSet visit(TimeSet first, EmptyTimeSet second);

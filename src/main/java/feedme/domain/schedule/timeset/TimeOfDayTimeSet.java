@@ -47,10 +47,9 @@ public class TimeOfDayTimeSet implements PeriodicTimeSet {
         LocalDate date = time.atZone(timeZone).toLocalDate();
         Instant start = getEarliestTime(startTime.atDate(date));
         if (!isOvernight) {
-            if (time.isAfter(start) || time.equals(start)) {
-                Instant end = getLatestTime(endTime.atDate(date));
-                return Optional.of(TimeSpan.withBounds(start, end));
-            }
+            Instant end = getLatestTime(endTime.atDate(date));
+            TimeSpan span = TimeSpan.withBounds(start, end);
+            return span.getAt(time);
         } else {
             if (time.isAfter(start) || time.equals(start)) {
                 Instant end = getLatestTime(endTime.atDate(date.plusDays(1)));
