@@ -9,6 +9,7 @@ import feedme.domain.tidbit.seed.Seed;
 import feedme.domain.tidbit.urgency.Urgency;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Set;
 
 /**
@@ -67,7 +68,7 @@ public abstract class Tidbit {
     @Override
     public String toString() {
         return "Tidbit{" +
-            "createdAt=" + createdAt +
+            "createdAt=" + createdAt.atZone(ZoneId.systemDefault()) +
             ", currentState=" + currentState +
             ", message='" + message + '\'' +
             '}';

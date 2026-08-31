@@ -59,6 +59,11 @@ final class CompositeTimeSetOperationVisitors {
 			public @NotNull TimeSet visit(CompositeIntersectTimeSet set) {
 				return appendUnion(thisSet, set);
 			}
+
+			@Override
+			public @NotNull TimeSet visit(TimeOfDayTimeSet set) {
+				return appendUnion(thisSet, set);
+			}
 		}
 
 		static class Intersect extends CurriedTsBinaryOpVisitor.DelegateToEverything<CompositeUnionTimeSet> {
@@ -85,6 +90,11 @@ final class CompositeTimeSetOperationVisitors {
 			public @NotNull TimeSet visit(CompositeIntersectTimeSet set) {
 				return appendIntersect(set, thisSet);
 			}
+
+			@Override
+			public @NotNull TimeSet visit(TimeOfDayTimeSet set) {
+				return naiveIntersect(thisSet, set);
+			}
 		}
 	}
 
@@ -110,6 +120,11 @@ final class CompositeTimeSetOperationVisitors {
 			public @NotNull TimeSet visit(CompositeIntersectTimeSet set) {
 				return naiveUnion(thisSet, set);
 			}
+
+			@Override
+			public @NotNull TimeSet visit(TimeOfDayTimeSet set) {
+				return naiveUnion(thisSet, set);
+			}
 		}
 
 		static class Intersect extends CurriedTsBinaryOpVisitor.DelegateToCompositeUnion<CompositeIntersectTimeSet> {
@@ -130,6 +145,11 @@ final class CompositeTimeSetOperationVisitors {
 			@Override
 			public @NotNull TimeSet visit(CompositeIntersectTimeSet set) {
 				return mergeIntersect(thisSet, set);
+			}
+
+			@Override
+			public @NotNull TimeSet visit(TimeOfDayTimeSet set) {
+				return appendIntersect(thisSet, set);
 			}
 		}
 	}

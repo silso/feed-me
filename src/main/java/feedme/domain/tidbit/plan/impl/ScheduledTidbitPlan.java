@@ -25,4 +25,8 @@ public class ScheduledTidbitPlan implements TidbitSchedulerPlan {
         SortedSet<Instant> tailSet = scheduledTidbits.tailSet(currentTime);
         return tailSet.isEmpty() ? Optional.empty() : Optional.of(tailSet.first());
     }
+
+    public long tidbitCount() {
+        return scheduledTidbits.size();
+    }
 }

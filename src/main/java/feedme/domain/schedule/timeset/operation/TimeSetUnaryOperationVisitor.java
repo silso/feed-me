@@ -11,9 +11,7 @@ public interface TimeSetUnaryOperationVisitor {
     default @NotNull TimeSet visit(DiscretePeriodicTimeSet<?> set) {
         throw new UnsupportedOperationException("Unimplemented");
     }
-    default @NotNull TimeSet visit(TimeOfDayTimeSet set) {
-        throw new UnsupportedOperationException("Unimplemented");
-    }
+    @NotNull TimeSet visit(TimeOfDayTimeSet set);
     default @NotNull TimeSet visit(DurationTimeSet set) {
         // unreachable because this just uses composite
         throw new UnsupportedOperationException("Unimplemented");

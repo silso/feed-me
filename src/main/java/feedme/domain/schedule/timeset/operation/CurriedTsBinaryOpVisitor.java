@@ -62,7 +62,18 @@ abstract class CurriedTsBinaryOpVisitor<ThisSet extends TimeSet> implements Time
 		}
 	}
 
-	static abstract class DelegateToAll<T extends TimeSet> extends DelegateToCompositeIntersect<T> {
+	static abstract class DelegateToTimeOfDayTimeSet<T extends TimeSet> extends DelegateToCompositeIntersect<T> {
+		DelegateToTimeOfDayTimeSet(TimeSetBinaryOperationVisitor binaryOperationVisitor, T thisSet) {
+			super(binaryOperationVisitor, thisSet);
+		}
+
+		@Override
+		public final @NotNull TimeSet visit(TimeOfDayTimeSet set) {
+			return set.accept(binaryOperationVisitor, thisSet);
+		}
+	}
+
+	static abstract class DelegateToAll<T extends TimeSet> extends DelegateToTimeOfDayTimeSet<T> {
 		DelegateToAll(TimeSetBinaryOperationVisitor binaryOperationVisitor, T thisSet) {
 			super(binaryOperationVisitor, thisSet);
 		}

@@ -29,7 +29,7 @@ public class SimpleStatefulTaskSeed extends TaskSeed {
     private final Fsm<SeedState, TaskSeedWithTime> stateMachine;
 
     public SimpleStatefulTaskSeed(String instruction, Instant expiresAt, TidbitRepository repository, Duration expirationTime, Duration onItTime) {
-        super(repository, instruction, expiresAt);
+        super(repository, instruction, expiresAt, TaskPriority.Minor);
         this.stateMachine = createStateMachine(
             expiresAt.minus(Duration.ofHours(1)),
             expirationTime,
@@ -127,7 +127,7 @@ public class SimpleStatefulTaskSeed extends TaskSeed {
      * @param now the time to create tidbits for
      */
     @Override
-    public void createTidbits(@NotNull Instant now) {
+    public void updateTidbits(@NotNull Instant now) {
         if (!State.isFinished(currentState)) {
             this.stateMachine.step(currentState, new TaskSeedWithTime(this, now));
         }

@@ -31,6 +31,11 @@ public class UnionOperationVisitor implements TimeSetBinaryOperationVisitor {
     }
 
     @Override
+    public @NotNull TimeSet visit(TimeSet first, TimeOfDayTimeSet second) {
+        return new CompositeUnionTimeSet(List.of(first, second));
+    }
+
+    @Override
     public @NotNull TimeSet visit(TimeSet first, DurationTimeSet second) {
         return new CompositeUnionTimeSet(List.of(first, second));
     }

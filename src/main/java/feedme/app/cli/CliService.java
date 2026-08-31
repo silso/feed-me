@@ -3,20 +3,14 @@ package feedme.app.cli;
 import feedme.app.cli.action.ActionService;
 import feedme.domain.tidbit.Tidbit;
 import feedme.domain.tidbit.TidbitRepository;
-import feedme.domain.tidbit.seed.Seed;
-import feedme.domain.tidbit.seed.SeedRepository;
-import feedme.domain.tidbit.seed.SeedService;
+import feedme.domain.tidbit.seed.*;
 import feedme.domain.tidbit.task.SimpleStatefulTaskSeed;
 import feedme.sample.task.ScheduledTaskSeedSample;
-
+import feedme.util.CreativeClock;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.Locale;
-import java.util.Queue;
+import java.time.*;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -24,7 +18,8 @@ public class CliService {
     private final TidbitRepository tidbits = new TidbitRepository();
     private final SeedRepository seeds = new SeedRepository();
     private final ActionService actionService = new ActionService();
-    private final SeedService seedService = new SeedService(seeds);
+    private final CreativeClock clock = new CreativeClock();
+    private final SeedService seedService = new SeedService(seeds, clock);
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     private final Queue<String> stdinLines = new ArrayDeque<>();
@@ -63,9 +58,9 @@ public class CliService {
     }
 
     private void printInfo() {
-        out("\nSeeds:");
+        out("\nTime: %s", Instant.now(clock).atZone(ZoneId.systemDefault()));
+        out("Seeds:");
         seeds.forEach((id, seed) -> {
-            seed.createTidbits(Instant.now());
             out("%d: %s".formatted(id, seed));
         });
         out("Tidbits:");
@@ -95,6 +90,7 @@ public class CliService {
                 case "action" -> doAction(remaining);
                 case "print" -> {return new CliStatus(true, true);}
                 case "sample" -> addSample(remaining);
+                case "time" -> time(remaining);
                 case "exit" -> {
                     out("bye");
                     return new CliStatus(false, false);
@@ -184,6 +180,22 @@ public class CliService {
     private void addSample(String remaining) {
         int sampleNum = Integer.parseInt(remaining);
         ScheduledTaskSeedSample.getSample(sampleNum, tidbits).populate(seeds);
+    }
+
+    private void time(String remaining) throws InputException {
+        List<String> splitInput;
+        try {
+            splitInput = new InputParser(2, true, true).parse(remaining);
+        } catch (InputParser.InputParserException e) {
+            throw new InputException("start", e);
+        }
+        String command = splitInput.get(0);
+        String args = splitInput.size() > 1 ? splitInput.get(1) : "";
+        switch (command) {
+            case "plus" -> clock.addOffset(Duration.parse("PT" + args));
+            case "mult" -> clock.setMultiplier(Integer.parseInt(args));
+            default -> throw new InputException("start", "unhandled command '%s'".formatted(command));
+        }
     }
 
     private void out(String format, Object... objects) {
