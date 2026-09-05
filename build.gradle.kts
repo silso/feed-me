@@ -1,37 +1,15 @@
 plugins {
-    java
-    groovy
-    application
+    // this is necessary to avoid the plugins to be loaded multiple times
+    // in each subproject's classloader
+    alias(libs.plugins.androidApplication) apply false
+    alias(libs.plugins.androidMultiplatformLibrary) apply false
+    alias(libs.plugins.composeMultiplatform) apply false
+    alias(libs.plugins.composeCompiler) apply false
+    alias(libs.plugins.kotlinJvm) apply false
+    alias(libs.plugins.kotlinMultiplatform) apply false
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("com.google.guava:guava:33.0.0-jre")
-    implementation("org.jetbrains:annotations:24.0.0")
-
-    testImplementation(platform("org.junit:junit-bom:5.9.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    implementation(platform("org.apache.groovy:groovy-bom:4.0.19"))
-    implementation("org.apache.groovy:groovy")
-    testImplementation(platform("org.spockframework:spock-bom:2.3-groovy-4.0"))
-    testImplementation("org.spockframework:spock-core")
-}
-
-application {
-    mainClass = "feedme.app.Main"
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-tasks.named<JavaExec>("run") {
-    standardInput = System.`in`
-    standardOutput = System.out
-}
+//tasks.named<JavaExec>("run") {
+//    standardInput = System.`in`
+//    standardOutput = System.out
+//}
